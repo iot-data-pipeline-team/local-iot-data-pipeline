@@ -19,6 +19,7 @@ spark = SparkSession.builder \
     ) \
     .getOrCreate()
 
+spark.sparkContext.setLogLevel("ERROR")
 
 df = spark.readStream \
     .format("kafka") \
@@ -86,7 +87,7 @@ df_parquet_stream = spark.readStream \
     .schema(schema_parquet) \
     .load("/home/jovyan/data/output")
 
-agg_df = df_parquet_stream \
+agg_df = clean_df \
     .withWatermark("timestamp", "1 minute")\
     .groupBy(
         col("device_id"),
@@ -122,6 +123,15 @@ def write_raw(batch_df, batch_id):
         .save()
     
 def write_agg(batch_df, batch_id):
+
+    count = batch_df.count()
+
+    with open("/home/jovyan/debug_agg.txt", "a") as f:
+        f.write(f"\n[AGG] Batch {batch_id}, rows: {count}\n")
+
+    if count > 0:
+        batch_df.show(truncate=False)
+
     batch_df = batch_df.select(
         col("device_id"),
         col("window.start").alias("window_start"),
@@ -140,13 +150,15 @@ def write_agg(batch_df, batch_id):
         .mode("append") \
         .save()
 
-raw_query = df_parquet_stream.writeStream \
+raw_query = clean_df.writeStream \
     .foreachBatch(write_raw) \
+    .trigger(processingTime="2 seconds") \
     .option("checkpointLocation", "/home/jovyan/data/checkpoints/raw_data") \
     .start()
 
 agg_query = agg_df.writeStream \
     .foreachBatch(write_agg) \
+    .trigger(processingTime="2 seconds") \
     .option("checkpointLocation", "/home/jovyan/data/checkpoints/agg_data") \
     .start()
 

@@ -3,8 +3,6 @@ import json
 import time
 import random
 from datetime import datetime
-from faker import Faker
-fake = Faker()
 
 producer = KafkaProducer(
     bootstrap_servers = 'localhost:9094',
