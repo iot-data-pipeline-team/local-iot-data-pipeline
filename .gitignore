@@ -1,0 +1,8 @@
+venv/
+data/
+output/
+kafka_data/
+zookeeper_data/
+*.parquet
+*.log
+__pycache__/
