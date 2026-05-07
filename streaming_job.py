@@ -9,14 +9,6 @@ from pyspark.sql.functions import window, avg
 spark = SparkSession.builder \
     .master("local[*]") \
     .appName("KafkaTest") \
-    .config(
-        "spark.jars.packages",
-        "org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.0"
-    ) \
-    .config(
-        "spark.jars",
-        "/home/jovyan/jars/postgresql-42.6.2.jar"
-    ) \
     .getOrCreate()
 
 spark.sparkContext.setLogLevel("ERROR")
@@ -59,6 +51,7 @@ clean_df = clean_df.withColumn(
     "anomaly_flag",
     when(col("temperature") > 50, 1).otherwise(0)
 )
+
 
 query_parquet = clean_df.writeStream \
     .format("parquet") \
@@ -150,6 +143,14 @@ def write_agg(batch_df, batch_id):
         .mode("append") \
         .save()
 
+def write_to_es(batch_df, batch_id):
+    batch_df.write \
+        .format("org.elasticsearch.spark.sql") \
+        .option("es.nodes", "elasticsearch") \
+        .option("es.port", "9200") \
+        .mode("append") \
+        .save("iot_index")
+
 raw_query = clean_df.writeStream \
     .foreachBatch(write_raw) \
     .trigger(processingTime="2 seconds") \
@@ -161,5 +162,13 @@ agg_query = agg_df.writeStream \
     .trigger(processingTime="2 seconds") \
     .option("checkpointLocation", "/home/jovyan/data/checkpoints/agg_data") \
     .start()
+
+es_query = clean_df.writeStream \
+    .foreachBatch(write_to_es) \
+    .trigger(processingTime="2 seconds") \
+    .option("checkpointLocation", "/home/jovyan/data/checkpoints/es_data") \
+    .start()
+
+
 
 spark.streams.awaitAnyTermination()

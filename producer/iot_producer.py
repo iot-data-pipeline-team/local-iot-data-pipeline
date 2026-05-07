@@ -3,6 +3,8 @@ import json
 import time
 import random
 from datetime import datetime
+from zoneinfo import ZoneInfo
+
 
 producer = KafkaProducer(
     bootstrap_servers = 'localhost:9094',
@@ -48,7 +50,7 @@ while True:
         "technician": meta["technician"],
         "temperature": round(random.uniform(20, 40), 2),
         "humidity": round(random.uniform(30, 80), 2),
-        "timestamp": datetime.now().isoformat()
+        "timestamp": datetime.now(ZoneInfo("Africa/Cairo")).isoformat()
     }
 
     # status logic

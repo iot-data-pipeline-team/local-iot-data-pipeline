@@ -99,6 +99,23 @@ services:
     volumes:
       - .:/home/jovyan/work
       - ./jars:/home/jovyan/jars
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.13.0
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+    ports:
+      - "9200:9200"
+    networks:
+      - kafka-net      
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.13.0
+    ports:
+      - "5601:5601"
+    depends_on:
+      - elasticsearch
+    networks:
+      - kafka-net      
 
 volumes:
   kafka_data:
