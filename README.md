@@ -156,7 +156,7 @@ SELECT
     temperature,
     humidity,
     status,
-    timestamp AT TIME ZONE 'UTC' AS event_time,
+    timestamp AS event_time,
     anomaly_flag,
     CASE 
         WHEN timestamp >= NOW() - INTERVAL '60 seconds' THEN 1 
