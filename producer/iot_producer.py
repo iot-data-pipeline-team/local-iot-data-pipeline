@@ -4,6 +4,7 @@ import time
 import random
 from datetime import datetime
 from zoneinfo import ZoneInfo
+from datetime import timezone
 
 
 producer = KafkaProducer(
@@ -50,9 +51,8 @@ while True:
         "technician": meta["technician"],
         "temperature": round(random.uniform(20, 40), 2),
         "humidity": round(random.uniform(30, 80), 2),
-        "timestamp": datetime.now(ZoneInfo("Africa/Cairo")).isoformat()
+        "timestamp": datetime.now(timezone.utc).isoformat()
     }
-
     # status logic
     if data["temperature"] > 35:
         data["status"] = "high"
@@ -64,7 +64,7 @@ while True:
     print("Sending:", data)
     producer.send("iot-data", data)
 
-    time.sleep(2)
+    time.sleep(0.5)
 
 
 

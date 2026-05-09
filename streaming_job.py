@@ -9,6 +9,12 @@ from pyspark.sql.functions import window, avg
 spark = SparkSession.builder \
     .master("local[*]") \
     .appName("KafkaTest") \
+    .config("spark.sql.session.timeZone", "UTC") \
+    .config("spark.hadoop.fs.s3a.endpoint", "http://minio:9000") \
+    .config("spark.hadoop.fs.s3a.access.key", "admin") \
+    .config("spark.hadoop.fs.s3a.secret.key", "password123") \
+    .config("spark.hadoop.fs.s3a.path.style.access", "true") \
+    .config("spark.hadoop.fs.s3a.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem") \
     .getOrCreate()
 
 spark.sparkContext.setLogLevel("ERROR")
@@ -17,7 +23,7 @@ df = spark.readStream \
     .format("kafka") \
     .option("kafka.bootstrap.servers", "kafka:9092") \
     .option("subscribe", "iot-data") \
-    .option("startingOffsets", "earliest") \
+    .option("startingOffsets", "latest") \
     .load()
 
 
@@ -55,10 +61,17 @@ clean_df = clean_df.withColumn(
 
 query_parquet = clean_df.writeStream \
     .format("parquet") \
-    .option("path", "/home/jovyan/data/output") \
+    .trigger(processingTime="2 seconds") \
+    .option("path", "s3a://iot-data/raw/") \
     .option("checkpointLocation", "/home/jovyan/data/checkpoints/parquet") \
     .partitionBy("device_id") \
     .outputMode("append") \
+    .start()
+
+debug_query = clean_df.writeStream \
+    .format("console") \
+    .outputMode("append") \
+    .trigger(processingTime="2 seconds") \
     .start()
 
 schema_parquet = StructType() \
@@ -75,10 +88,7 @@ schema_parquet = StructType() \
 
 
 
-df_parquet_stream = spark.readStream \
-    .format("parquet") \
-    .schema(schema_parquet) \
-    .load("/home/jovyan/data/output")
+
 
 agg_df = clean_df \
     .withWatermark("timestamp", "1 minute")\
@@ -119,8 +129,7 @@ def write_agg(batch_df, batch_id):
 
     count = batch_df.count()
 
-    with open("/home/jovyan/debug_agg.txt", "a") as f:
-        f.write(f"\n[AGG] Batch {batch_id}, rows: {count}\n")
+    print(f"[AGG] Batch {batch_id}, rows: {count}")
 
     if count > 0:
         batch_df.show(truncate=False)

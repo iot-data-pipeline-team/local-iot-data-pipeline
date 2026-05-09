@@ -84,6 +84,8 @@ services:
       - "5432:5432"
     networks:
       - kafka-net
+    volumes:
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
       
   jupyter:
     image: jupyter/pyspark-notebook:latest
@@ -116,7 +118,20 @@ services:
       - elasticsearch
     networks:
       - kafka-net      
-
+  minio:
+    image: minio/minio
+    container_name: minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: admin
+      MINIO_ROOT_PASSWORD: password123
+    command: server /data --console-address ":9001"
+    volumes:
+      - ./minio_data:/data
+    networks:
+      - kafka-net
 volumes:
   kafka_data:
 
