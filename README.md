@@ -82,12 +82,7 @@ docker ps
 ### 5️⃣ Create Kafka Topic
 
 ```bash
-docker exec -it kafka kafka-topics \
---create \
---topic iot-data \
---bootstrap-server kafka:9092 \
---partitions 1 \
---replication-factor 1
+docker exec -it kafka kafka-topics --create --topic iot-data --bootstrap-server kafka:9092 --partitions 1 --replication-factor 1
 ```
 
 ---
@@ -113,9 +108,10 @@ Run Spark:
 
 ```bash
 spark-submit \
---packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.0 \
+--packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.0,org.elasticsearch:elasticsearch-spark-30_2.12:8.13.0,org.apache.hadoop:hadoop-aws:3.3.4 \
 --jars /home/jovyan/jars/postgresql-42.6.2.jar \
 streaming_job.py
+
 ```
 
 ---
