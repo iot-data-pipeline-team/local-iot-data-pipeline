@@ -158,7 +158,7 @@ def write_to_es(batch_df, batch_id):
         .option("es.nodes", "elasticsearch") \
         .option("es.port", "9200") \
         .mode("append") \
-        .save("iot_index")
+        .save("iot-machines")
 
 raw_query = clean_df.writeStream \
     .foreachBatch(write_raw) \

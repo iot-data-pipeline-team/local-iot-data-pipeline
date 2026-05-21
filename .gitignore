@@ -1,34 +1,82 @@
+# =========================
 # Python environments
+# =========================
 venv/
-.env
+.venv/
 
+# =========================
 # Python cache
+# =========================
 __pycache__/
 *.pyc
+*.pyo
 
+
+
+# =========================
 # Jupyter
+# =========================
 .ipynb_checkpoints/
 
+# =========================
 # Logs
+# =========================
 *.log
 
+# =========================
 # Spark checkpoints/state
+# =========================
 checkpoints/
 data/checkpoints/
-
-# Generated parquet files
-*.parquet
-
-# Spark metadata
 _spark_metadata/
 
+# =========================
+# Spark temporary files
+# =========================
+metastore_db/
+derby.log
+
+# =========================
+# Generated parquet files
+# =========================
+*.parquet
+
+# =========================
 # MinIO generated storage
+# =========================
 minio_data/
 
+# =========================
 # Kafka/Zookeeper persistence
+# =========================
 kafka_data/
 zookeeper_data/
 
+# =========================
+# PostgreSQL persistence
+# =========================
+postgres_data/
+
+# =========================
+# Elasticsearch persistence
+# =========================
+elasticsearch_data/
+
+# =========================
+# Docker/system/temp
+# =========================
+*.tmp
+.DS_Store
+Thumbs.db
+
+# =========================
+# IDE/editor
+# =========================
+.vscode/
+.idea/
+
+# =========================
 # Optional local outputs
+# =========================
 output/
 data/
