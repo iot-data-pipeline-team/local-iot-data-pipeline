@@ -15,16 +15,16 @@ The project simulates industrial IoT devices generating telemetry data and proce
 # 📸 Screenshots
 
 ## Kibana Dashboard
-(Add screenshot)
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/b7f7b604-a9c3-4fc3-8e5f-5d3f473e24c4" />
 
-## Kafka UI
-(Add screenshot)
 
 ## Spark Streaming
-(Add screenshot)
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/42bd90cf-dd6e-49f9-a53c-c5d1d028f4c0" />
+
 
 ## MinIO Storage
-(Add screenshot)
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/88b842e8-c537-4a28-a2bf-7f1fb005bd32" />
+
 
 ---
 
@@ -147,10 +147,7 @@ This automatically:
 | Service | URL |
 |---|---|
 | Kibana | http://localhost:5601 |
-| Kafka UI | http://localhost:12000 |
-| Spark Master | http://localhost:8081 |
 | MinIO Console | http://localhost:9001 |
-| Jupyter | http://localhost:8888 |
 | Elasticsearch | http://localhost:9200 |
 
 ---
