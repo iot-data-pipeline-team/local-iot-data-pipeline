@@ -1,63 +1,122 @@
-# 🚀 Real-Time IoT Data Pipeline
+# 🚀 Real-Time Industrial IoT Streaming Platform
 
-This project implements a real-time data engineering pipeline using Kafka, Spark Structured Streaming, PostgreSQL, and Power BI.
+A real-time industrial IoT data engineering platform built using Docker, Kafka, Spark Structured Streaming, Elasticsearch, PostgreSQL, MinIO, and Kibana.
 
----
-
-## 🎥 Demo Video
-
-Watch the full pipeline walkthrough here:  
-https://drive.google.com/your-link
+The project simulates industrial IoT devices generating telemetry data and processes it through a modern streaming architecture with automated orchestration and dashboard provisioning.
 
 ---
 
-## 📸 Screenshots
+# 🎥 Demo Video
+
+[Demo Link Here]
 
 ---
 
+# 📸 Screenshots
 
-## 🧠 Architecture
+## Kibana Dashboard
+(Add screenshot)
 
+## Kafka UI
+(Add screenshot)
+
+## Spark Streaming
+(Add screenshot)
+
+## MinIO Storage
+(Add screenshot)
+
+---
+
+# 🧠 Architecture
+
+```text
+Python IoT Producer
+        ↓
+Kafka + ZooKeeper
+        ↓
+Spark Structured Streaming
+   ↙         ↓          ↘
+PostgreSQL  Elasticsearch  MinIO (Parquet)
+                  ↓
+               Kibana
 ```
-IoT Producer → Kafka → Spark Structured Streaming → PostgreSQL → Power BI
-                           ↓
-                        Parquet (Data Lake)
-```
 
 ---
 
-## ⚙️ Tech Stack
+# ⚙️ Tech Stack
 
-* Python (IoT Producer)
-* Apache Kafka
-* Apache Spark (Structured Streaming)
-* PostgreSQL
-* Docker & Docker Compose
-* Power BI (DirectQuery)
+## Streaming & Processing
+- Apache Kafka
+- Apache Spark Structured Streaming
+- Python
+
+## Storage & Analytics
+- PostgreSQL
+- Elasticsearch
+- MinIO (S3-compatible object storage)
+
+## Visualization
+- Kibana
+- Kafka UI
+
+## Infrastructure
+- Docker
+- Docker Compose
 
 ---
 
-## 📦 Project Setup (Step-by-Step)
+# ✨ Key Features
 
-### 1️⃣ Clone Repository
+- Real-time IoT streaming pipeline
+- Automated Kafka topic creation
+- Elasticsearch template-first ingestion
+- Automated Kibana dashboard import
+- Real-time anomaly detection
+- Data lake storage using Parquet
+- Window-based aggregations
+- Automated MinIO bucket provisioning
+- Dockerized distributed architecture
+- Healthchecks and readiness orchestration
+
+---
+
+# 🧠 Engineering Concepts Demonstrated
+
+- Distributed systems orchestration
+- Readiness vs healthchecks
+- Real-time stream processing
+- Schema evolution & mapping management
+- Data lake architecture
+- Search and analytics pipelines
+- Infrastructure automation
+- Fault-tolerant initialization
+
+---
+
+# 📦 Quick Start
+
+## 1️⃣ Clone Repository
 
 ```bash
 git clone -b baseline-pipeline-malek https://github.com/iot-data-pipeline-team/local-iot-data-pipeline.git
+
 cd local-iot-data-pipeline
 ```
 
 ---
 
-### 2️⃣ Create Virtual Environment
+## 2️⃣ Create Virtual Environment
 
 ```bash
 python -m venv venv
-venv\Scripts\activate   # Windows
+
+venv\Scripts\activate
 ```
 
 ---
 
-### 3️⃣ Install Dependencies
+## 3️⃣ Install Dependencies
 
 ```bash
 pip install -r requirements.txt
@@ -65,154 +124,107 @@ pip install -r requirements.txt
 
 ---
 
-### 4️⃣ Start Docker Services
+## 4️⃣ Run Entire Platform
+
+```
+ .\scripts\run_project.bat 
+```
+
+This automatically:
+
+- Starts infrastructure services
+- Creates Kafka topic
+- Applies Elasticsearch index template
+- Imports Kibana dashboards
+- Creates MinIO bucket
+- Starts Spark cluster
+- Runs Spark streaming job
+- Starts IoT producer
+
+---
+
+# 🌐 Service URLs
+
+| Service | URL |
+|---|---|
+| Kibana | http://localhost:5601 |
+| Kafka UI | http://localhost:12000 |
+| Spark Master | http://localhost:8081 |
+| MinIO Console | http://localhost:9001 |
+| Jupyter | http://localhost:8888 |
+| Elasticsearch | http://localhost:9200 |
+
+---
+
+# 📊 Kibana Dashboard
+
+After startup:
+
+1. Open Kibana
+2. Navigate to Dashboards
+3. Open the imported IoT dashboard
+
+The dashboard auto-refreshes in near real-time.
+
+---
+
+# 🗂️ Data Outputs
+
+## PostgreSQL
+- Raw IoT events
+- Aggregated metrics
+
+## Elasticsearch
+- Searchable real-time analytics
+- Kibana visualizations
+
+## MinIO
+- Parquet files
+- Data lake storage
+
+---
+
+# ⚠️ Common Issues
+
+| Issue | Solution |
+|---|---|
+| Kafka startup failure | `docker compose down -v` |
+| Kibana import retrying | Wait for Kibana initialization |
+| Spark checkpoint conflicts | Delete checkpoints |
+| Elasticsearch unhealthy | Wait for JVM startup |
+
+---
+
+# 🧹 Reset Project
+
+## Soft Reset
 
 ```bash
-docker-compose up -d
+docker compose down
 ```
 
-Check containers:
+---
+
+## Full Reset
 
 ```bash
-docker ps
+docker compose down -v
 ```
 
 ---
 
-### 5️⃣ Create Kafka Topic
+# 🚀 Future Improvements
 
-```bash
-docker exec -it kafka kafka-topics --create --topic iot-data --bootstrap-server kafka:9092 --partitions 1 --replication-factor 1
-```
-
----
-
-### 6️⃣ Run IoT Producer
-
-```bash
-python producer/iot_producer.py
-```
+- Kubernetes deployment
+- Airflow orchestration
+- Grafana monitoring
+- CI/CD pipeline
+- Cloud deployment (AWS/Azure)
 
 ---
 
-### 7️⃣ Run Spark Streaming Job
-
-Enter container:
-
-```bash
-docker exec -it jupyter bash
-cd /home/jovyan/work
-```
-
-Run Spark:
-
-```bash
-docker exec -it jupyter spark-submit --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.0,org.elasticsearch:elasticsearch-spark-30_2.12:8.13.0,org.apache.hadoop:hadoop-aws:3.3.4 --jars /home/jovyan/jars/postgresql-42.6.2.jar /home/jovyan/work/streaming_job.py
-
-```
-
----
-
-### 8️⃣ Verify Data in PostgreSQL
-
-```bash
-docker exec -it postgres psql -U user -d db
-```
-
-```sql
-SELECT count(*) FROM iot_data;
-SELECT count(*) FROM iot_aggregates;
-```
-
----
-
-## 🧹 Reset Pipeline (if needed)
-
-```bash
-rm -rf /home/jovyan/data/output/*
-rm -rf /home/jovyan/data/checkpoints/*
-```
-
----
-
-## 📊 PostgreSQL Views (for Power BI)
-
-### 🔹 Raw Data View
-
-```sql
-CREATE OR REPLACE VIEW iot_data_view AS
-SELECT
-    device_id,
-    device_type,
-    location,
-    technician,
-    temperature,
-    humidity,
-    status,
-    timestamp AS event_time,
-    anomaly_flag,
-    CASE 
-        WHEN timestamp >= NOW() - INTERVAL '60 seconds' THEN 1 
-        ELSE 0
-    END AS is_recent
-FROM iot_data;
-```
-
----
-
-## ⚡ Performance Notes
-
-* Spark uses **micro-batch processing**
-* Use `.trigger(processingTime="2 seconds")` for near real-time updates
-* Use `.option("maxOffsetsPerTrigger", 10)` to reduce latency
-* JDBC writes are batched → slight delay is expected
-
----
-
-## 🎯 Key Features
-
-* Real-time data ingestion from IoT devices
-* Data cleaning and validation
-* Window-based aggregation
-* Anomaly detection
-* Dual pipeline:
-
-  * Real-time → PostgreSQL
-  * Storage → Parquet
-* Power BI integration via DirectQuery
-
----
-
-## ⚠️ Common Issues
-
-| Issue                 | Solution           |
-| --------------------- | ------------------ |
-| No data in aggregates | Wait for window    |
-| Spark crashes         | Delete checkpoints |
-| PostgreSQL type error | Fix schema         |
-| Kafka not working     | Check Docker       |
-
----
-
-## 🧠 Learning Outcomes
-
-* Real-time streaming with Spark
-* Kafka as buffering layer
-* Micro-batch processing
-* Data pipeline design
-* Debugging pipelines
-
----
-
-## 🚀 Future Improvements
-
-* Deploy on AWS (Kinesis, S3, Redshift)
-* Add monitoring
-* Improve schema (star schema)
-* Reduce latency further
-
----
-
-## 👨‍💻 Author
+# 👨‍💻 Author
 
 Abdelrahman Malek
+
+ITI Data Management Graduation Project
