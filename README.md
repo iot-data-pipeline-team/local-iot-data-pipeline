@@ -15,7 +15,7 @@ The project simulates industrial IoT devices generating telemetry data and proce
 # 📸 Screenshots
 
 ## Kibana Dashboard
-<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/b7f7b604-a9c3-4fc3-8e5f-5d3f473e24c4" />
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/d1e7ecbf-653e-4242-a6e2-8b276f6e5eca" />
 
 
 ## Spark Streaming
