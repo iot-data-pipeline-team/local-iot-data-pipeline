@@ -142,7 +142,6 @@ This automatically:
 - Starts IoT producer
 
 ---
-
 # 🌐 Service URLs
 
 | Service | URL |
@@ -156,17 +155,35 @@ This automatically:
 
 ---
 
-# 📊 Kibana Dashboard
+## 🔐 MinIO Login Credentials
+
+Use the following credentials to access the MinIO console:
+
+```text
+Username: admin
+Password: password123
+```
+
+---
+
+## 📊 Kibana Dashboard
 
 After startup:
 
-1. Open Kibana
-2. Navigate to Dashboards
-3. Open the imported IoT dashboard
+1. Open Kibana:
+   http://localhost:5601
 
-The dashboard auto-refreshes in near real-time.
+2. Navigate to:
+   Dashboards → My Dashboards
 
----
+3. Open the imported IoT dashboard.
+
+4. To enable real-time updates:
+   - Click the time filter in the top-right corner
+   - Enable auto-refresh
+   - Set refresh interval to 1 second
+
+The dashboard will now update in near real-time as new IoT events arrive.
 
 # 🗂️ Data Outputs
 
