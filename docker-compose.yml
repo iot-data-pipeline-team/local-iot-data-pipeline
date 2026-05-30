@@ -3,7 +3,7 @@ services:
   # ─── DATABASE: POSTGRES (Port 5433) ───────────────────────────────────────
   postgres:
     image: postgres:15
-    container_name: data-postgres
+    container_name: data-postgres1
     restart: unless-stopped
     environment:
       POSTGRES_USER: admin
@@ -22,7 +22,7 @@ services:
   # ─── STORAGE: MINIO (Ports 9005, 9006) ────────────────────────────────────
   minio:
     image: minio/minio:RELEASE.2024-05-10T01-41-38Z
-    container_name: data-minio
+    container_name: data-minio1
     restart: unless-stopped
     ports:
       - "9005:9000"
@@ -42,7 +42,7 @@ services:
   # ─── HADOOP ────────────────────────────────────────────────────────────────
   namenode:
     image: bde2020/hadoop-namenode:2.0.0-hadoop3.2.1-java8
-    container_name: data-namenode
+    container_name: data-namenode1
     restart: unless-stopped
     environment:
       - CLUSTER_NAME=test
@@ -60,7 +60,7 @@ services:
 
   datanode1:
     image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
-    container_name: data-datanode-1
+    container_name: data-datanode-11
     restart: unless-stopped
     depends_on:
       namenode:
@@ -72,7 +72,7 @@ services:
 
   datanode2:
     image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
-    container_name: data-datanode-2
+    container_name: data-datanode-22
     restart: unless-stopped
     depends_on:
       namenode:
@@ -85,7 +85,7 @@ services:
   # ─── KAFKA CLUSTER (3 Brokers + Zookeeper) ────────────────────────────────
   zookeeper:
     image: confluentinc/cp-zookeeper:7.5.0
-    container_name: data-zookeeper
+    container_name: data-zookeeper1
     restart: unless-stopped
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
@@ -98,7 +98,7 @@ services:
 
   kafka1:
     image: confluentinc/cp-kafka:7.5.0
-    container_name: data-kafka-1
+    container_name: data-kafka-11
     restart: unless-stopped
     depends_on:
       zookeeper:
@@ -120,7 +120,7 @@ services:
 
   kafka2:
     image: confluentinc/cp-kafka:7.5.0
-    container_name: data-kafka-2
+    container_name: data-kafka-22
     restart: unless-stopped
     depends_on:
       zookeeper:
@@ -140,7 +140,7 @@ services:
 
   kafka3:
     image: confluentinc/cp-kafka:7.5.0
-    container_name: data-kafka-3
+    container_name: data-kafka-33
     restart: unless-stopped
     depends_on:
       zookeeper:
@@ -161,7 +161,7 @@ services:
   # ─── ELK STACK ─────────────────────────────────────────────────────────────
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:7.17.10
-    container_name: data-elasticsearch
+    container_name: data-elasticsearch1
     restart: unless-stopped
     environment:
       - discovery.type=single-node
@@ -179,7 +179,7 @@ services:
 
   kibana:
     image: docker.elastic.co/kibana/kibana:7.17.10
-    container_name: data-kibana
+    container_name: data-kibana1
     restart: unless-stopped
     depends_on:
       elasticsearch:
@@ -192,7 +192,7 @@ services:
   # ─── MONITORING: GRAFANA ───────────────────────────────────────────────────
   grafana:
     image: grafana/grafana:10.4.0
-    container_name: data-grafana
+    container_name: data-grafana1
     restart: unless-stopped
     ports:
       - "13000:3000"
@@ -206,7 +206,7 @@ services:
   # The webserver and scheduler wait for this to complete successfully.
   airflow-init:
     image: apache/airflow:2.7.1
-    container_name: data-airflow-init
+    container_name: data-airflow-init1
     restart: on-failure
     depends_on:
       postgres:
@@ -226,7 +226,7 @@ services:
 
   airflow-webserver:
     image: apache/airflow:2.7.1
-    container_name: data-airflow-web
+    container_name: data-airflow-web1
     restart: unless-stopped
     depends_on:
       airflow-init:
@@ -251,7 +251,7 @@ services:
 
   airflow-scheduler:
     image: apache/airflow:2.7.1
-    container_name: data-airflow-scheduler
+    container_name: data-airflow-scheduler1
     restart: unless-stopped
     depends_on:
       airflow-init:
@@ -270,7 +270,7 @@ services:
   # ─── JUPYTER PYSPARK ──────────────────────────────────────────────────────
   jupyter-pyspark:
     image: jupyter/pyspark-notebook:latest
-    container_name: data-jupyter
+    container_name: data-jupyter1
     restart: unless-stopped
     ports:
       - "18888:8888"
@@ -278,19 +278,6 @@ services:
       - JUPYTER_TOKEN=easy_password
     volumes:
       - jupyter_notebooks:/home/jovyan/work
-
-  # ─── HUE ──────────────────────────────────────────────────────────────────
-  hue:
-    image: gethue/hue:4.11.0
-    container_name: data-hue
-    restart: unless-stopped
-    ports:
-      - "28888:8888"
-    depends_on:
-      namenode:
-        condition: service_healthy
-      postgres:
-        condition: service_healthy
 
 # ─── NAMED VOLUMES ──────────────────────────────────────────────────────────
 volumes:
