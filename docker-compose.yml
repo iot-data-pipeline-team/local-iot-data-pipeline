@@ -110,7 +110,24 @@ services:
       - kafka-1
       - kafka-2
       - kafka-3
-
+    # ─── DATABASE: POSTGRES (Port 5433) ───────────────────────────────────────
+  postgres:
+    image: postgres:15
+    container_name: data-postgres1
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password123
+      POSTGRES_DB: data_hub
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d data_hub"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 volumes:
   kafka_1_data:
     driver: local
@@ -118,6 +135,9 @@ volumes:
     driver: local
   kafka_3_data:
     driver: local
+  postgres_data:
+    driver: local
+
 
 networks:
   kafka-net:
