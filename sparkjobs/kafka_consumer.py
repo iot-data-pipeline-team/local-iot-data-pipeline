@@ -1,9 +1,10 @@
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import *
 from pyspark.sql.types import *
-from PostgreSQLConnection import write_to_postgres
 from schema_df import iot_schema
 from transformations import apply_transformations
+from aggregations import machine_summary
+from WriteToPostgrSQL import write_to_postgres_bronze, write_to_postgres_silver, write_to_postgres_gold
 
 # =============================================
 spark = (
@@ -94,11 +95,18 @@ flat_df = final_df.select(
     col("pump_sensors.inlet_pressure_bar").alias("inlet_pressure")
 )
 
+# ==========================================================
+# apply transformations
 
 enhanced_df = flat_df
+enhanced_df = apply_transformations(enhanced_df)
 
 
-enhanced_df = apply_transformations(flat_df)
+# ==========================================================
+# apply aggregations
+
+aggregated_df = enhanced_df
+aggregated_df = machine_summary(aggregated_df)
 
 
 # query = (
@@ -109,15 +117,36 @@ enhanced_df = apply_transformations(flat_df)
 #     .start()
 # )
 
-query = (
+query_bronze = (
     flat_df
     .writeStream
-    .foreachBatch(write_to_postgres)# write to postgres
+    .foreachBatch(write_to_postgres_bronze)# write to postgres
     .outputMode("append")
+    .start()
+)
+
+
+query_silver = (
+    enhanced_df
+    .writeStream
+    .foreachBatch(write_to_postgres_silver)# write to postgres
+    .outputMode("append")
+    .start()
+)
+
+query_gold = (
+    aggregated_df
+    .writeStream
+    .foreachBatch(write_to_postgres_gold)# write to postgres
+    .outputMode("complete")
     .start()
 )
 
 
 
 
-query.awaitTermination()
+# query_bronze.awaitTermination()
+# query_silver.awaitTermination()
+# query_gold.awaitTermination()
+
+spark.streams.awaitAnyTermination()
