@@ -56,4 +56,4 @@ echo ====================================
 echo Starting IoT Producer...
 echo ====================================
 
-start cmd /k "python producer/iot_producer.py"
+start cmd /k "python producer/ahmed_producer.py"

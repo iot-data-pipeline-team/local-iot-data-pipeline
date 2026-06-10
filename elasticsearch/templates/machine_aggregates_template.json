@@ -1,0 +1,60 @@
+{
+  "index_patterns": ["machine-aggregates*"],
+  "template": {
+    "settings": {
+      "number_of_shards": 1,
+      "number_of_replicas": 0
+    },
+    "mappings": {
+      "properties": {
+        "machine_id": {
+          "type": "keyword"
+        },
+
+        "window_start": {
+          "type": "date"
+        },
+
+        "window_end": {
+          "type": "date"
+        },
+
+        "avg_temp": {
+          "type": "float"
+        },
+
+        "avg_rpm": {
+          "type": "float"
+        },
+
+        "avg_vibration": {
+          "type": "float"
+        },
+
+        "avg_power": {
+          "type": "float"
+        },
+
+        "avg_health_score": {
+          "type": "float"
+        },
+
+        "min_health_score": {
+          "type": "float"
+        },
+
+        "fault_count": {
+          "type": "long"
+        },
+
+        "total_events": {
+          "type": "long"
+        },
+
+        "fault_percentage": {
+          "type": "float"
+        }
+      }
+    }
+  }
+}

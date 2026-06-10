@@ -1,0 +1,48 @@
+{
+  "index_patterns": ["machine-events*"],
+  "template": {
+    "settings": {
+      "number_of_shards": 1,
+      "number_of_replicas": 0
+    },
+    "mappings": {
+      "properties": {
+        "timestamp": { "type": "date" },
+        "event_id": { "type": "keyword" },
+        "machine_id": { "type": "keyword" },
+        "machine_type": { "type": "keyword" },
+        "floor": { "type": "keyword" },
+        "shift": { "type": "keyword" },
+        "status": { "type": "keyword" },
+        "error_code": { "type": "keyword" },
+        "is_fault": { "type": "boolean" },
+
+        "temperature": { "type": "float" },
+        "vibration": { "type": "float" },
+        "rpm": { "type": "float" },
+        "power_kw": { "type": "float" },
+
+        "anomaly_flag": { "type": "integer" },
+
+        "health_score": { "type": "float" },
+        "temperature_status": { "type": "keyword" },
+        "vibration_status": { "type": "keyword" },
+        "fault_flag": { "type": "integer" },
+        "event_date": { "type": "date" },
+        "event_hour": { "type": "integer" },        
+
+        "cnc_oil": { "type": "float" },
+        "coolant_pressure": { "type": "float" },
+
+        "joint_torque": { "type": "float" },
+        "force": { "type": "float" },
+
+        "belt_tension": { "type": "float" },
+        "load_weight": { "type": "float" },
+
+        "flow_rate": { "type": "float" },
+        "inlet_pressure": { "type": "float" }
+      }
+    }
+  }
+}

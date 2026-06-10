@@ -56,6 +56,8 @@ services:
         echo 'Creating topic iot-data...'
 
         kafka-topics --create --if-not-exists --topic iot-data --bootstrap-server kafka:9092 --partitions 1 --replication-factor 1
+        
+        kafka-topics --create --if-not-exists --topic sensor-events --bootstrap-server kafka:9092 --partitions 1 --replication-factor 1
 
         echo 'Kafka topic created successfully.'
       "
@@ -142,6 +144,7 @@ services:
     environment:
       - discovery.type=single-node
       - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
     ports:
       - "9200:9200"
     networks:
@@ -164,7 +167,9 @@ services:
 
         echo 'Applying template...'
 
-        curl -X PUT http://elasticsearch:9200/_index_template/iot_template -H 'Content-Type: application/json' -d @/templates/iot-template.json
+        curl -X PUT http://elasticsearch:9200/_index_template/machine_template -H 'Content-Type: application/json' -d @/templates/machine_template.json
+
+        curl -X PUT http://elasticsearch:9200/_index_template/machine_aggregates_template -H 'Content-Type: application/json' -d @/templates/machine_aggregates_template.json
 
         echo 'Template applied successfully.'
       "
