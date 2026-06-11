@@ -6,7 +6,9 @@ echo ====================================
 
 docker compose up -d ^
 zookeeper ^
-kafka ^
+kafka1 ^
+kafka2 ^
+kafka3 ^
 elasticsearch ^
 postgres ^
 minio ^
@@ -29,6 +31,13 @@ IF %ERRORLEVEL% NEQ 0 EXIT /B 1
 docker compose run --rm minio-init
 IF %ERRORLEVEL% NEQ 0 EXIT /B 1
 
+
+echo.
+echo ====================================
+Starting Kafka UI...
+echo ====================================
+
+docker compose up -d kafka-ui
 
 echo.
 echo ====================================

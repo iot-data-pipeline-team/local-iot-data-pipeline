@@ -11,9 +11,9 @@ services:
     volumes:
       - zookeeper_data:/var/lib/zookeeper
 
-  kafka:
+  kafka1:
     image: confluentinc/cp-kafka:7.6.0
-    container_name: kafka
+    container_name: kafka1
 
     healthcheck:
       test: ["CMD", "kafka-topics", "--bootstrap-server", "localhost:9092", "--list"]
@@ -24,40 +24,115 @@ services:
     depends_on:
       - zookeeper
     ports:
-      - "9094:9094"
+      - "19092:19092"
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,EXTERNAL://0.0.0.0:9094
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,EXTERNAL://localhost:9094
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,EXTERNAL://0.0.0.0:19092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka1:9092,EXTERNAL://localhost:19092
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,EXTERNAL:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-    # volumes:
-    #   - ./kafka_data:/var/lib/kafka/data
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 3
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 2      
+      KAFKA_MIN_INSYNC_REPLICAS: 2      
     networks:
       - kafka-net
     volumes:
-      - kafka_data:/var/lib/kafka/data      
+      - kafka1_data:/var/lib/kafka/data  
+
+
+
+  kafka2:
+    image: confluentinc/cp-kafka:7.6.0
+    container_name: kafka2
+
+    healthcheck:
+      test: ["CMD", "kafka-topics", "--bootstrap-server", "localhost:9093", "--list"]
+      interval: 10s
+      timeout: 10s
+      retries: 10    
+
+    depends_on:
+      - zookeeper
+    ports:
+      - "19093:19093"
+    environment:
+      KAFKA_BROKER_ID: 2
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9093,EXTERNAL://0.0.0.0:19093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka2:9093,EXTERNAL://localhost:19093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 3
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 2   
+      KAFKA_MIN_INSYNC_REPLICAS: 2                     
+    networks:
+      - kafka-net
+    volumes:
+      - kafka2_data:/var/lib/kafka/data  
+
+
+
+
+  kafka3:
+    image: confluentinc/cp-kafka:7.6.0
+    container_name: kafka3
+
+    healthcheck:
+      test: ["CMD", "kafka-topics", "--bootstrap-server", "localhost:9094", "--list"]
+      interval: 10s
+      timeout: 10s
+      retries: 10    
+
+    depends_on:
+      - zookeeper
+    ports:
+      - "19094:19094"
+    environment:
+      KAFKA_BROKER_ID: 3
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9094,EXTERNAL://0.0.0.0:19094
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka3:9094,EXTERNAL://localhost:19094
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 3
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 2    
+      KAFKA_MIN_INSYNC_REPLICAS: 2                    
+    networks:
+      - kafka-net
+    volumes:
+      - kafka3_data:/var/lib/kafka/data  
+
+
+
+
+
   kafka-init:
     image: confluentinc/cp-kafka:7.6.0
     depends_on:
-      kafka:
+      kafka1:
         condition: service_healthy
+      kafka2:
+        condition: service_healthy
+      kafka3:
+        condition: service_healthy                      
     entrypoint: >
       sh -c "
         echo 'Waiting for Kafka...'
 
-        until kafka-topics --bootstrap-server kafka:9092 --list >/dev/null 2>&1; do
+        until kafka-topics --bootstrap-server kafka1:9092 --list >/dev/null 2>&1; do
           echo 'Kafka not ready yet...'
           sleep 5
         done
 
         echo 'Creating topic iot-data...'
-
-        kafka-topics --create --if-not-exists --topic iot-data --bootstrap-server kafka:9092 --partitions 1 --replication-factor 1
         
-        kafka-topics --create --if-not-exists --topic sensor-events --bootstrap-server kafka:9092 --partitions 1 --replication-factor 1
+        kafka-topics --create --if-not-exists --topic sensor-events --bootstrap-server kafka1:9092 --partitions 6 --replication-factor 3
+
+        kafka-topics --create --if-not-exists --topic sensor-processed --bootstrap-server kafka1:9092 --partitions 6 --replication-factor 3
 
         echo 'Kafka topic created successfully.'
       "
@@ -72,9 +147,11 @@ services:
       - kafka-net
     environment:
       KAFKA_CLUSTERS_0_NAME: local-cluster
-      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka1:9092,kafka2:9093,kafka3:9094  
     depends_on:
-      - kafka
+      - kafka1
+      - kafka2
+      - kafka3
 
   spark-master:
     image: apache/spark:3.5.0
@@ -247,7 +324,9 @@ services:
     networks:
       - kafka-net
 volumes:
-  kafka_data:
+  kafka1_data:
+  kafka2_data:
+  kafka3_data:
   zookeeper_data:
   postgres_data:
   elasticsearch_data:

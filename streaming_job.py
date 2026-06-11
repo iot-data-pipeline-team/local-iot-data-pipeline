@@ -1,11 +1,8 @@
-from pyspark.sql.functions import to_date, hour, lit, sum, count, min, greatest
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import from_json, col
+from pyspark.sql.functions import to_date, hour, lit, sum, count, min, greatest
+from pyspark.sql.functions import when, window, avg, to_timestamp, from_json, col
+from pyspark.sql.functions import to_json, struct
 from pyspark.sql.types import *
-from pyspark.sql.functions import to_timestamp
-from pyspark.sql.types import TimestampType
-from pyspark.sql.functions import when
-from pyspark.sql.functions import window, avg
 
 spark = SparkSession.builder \
     .master("local[*]") \
@@ -22,7 +19,7 @@ spark.sparkContext.setLogLevel("ERROR")
 
 df = spark.readStream \
     .format("kafka") \
-    .option("kafka.bootstrap.servers", "kafka:9092") \
+    .option("kafka.bootstrap.servers", "kafka1:9092,kafka2:9093,kafka3:9094") \
     .option("subscribe", "sensor-events") \
     .option("startingOffsets", "latest") \
     .load()
@@ -202,6 +199,20 @@ gold_df = gold_df.select(
     col("total_events")
 )
 
+
+silver_kafka_df = silver_df.select(
+    to_json(
+        struct(*silver_df.columns)
+    ).alias("value")
+)
+
+silver_kafka_query = silver_kafka_df.writeStream \
+    .format("kafka") \
+    .option("kafka.bootstrap.servers", "kafka1:9092,kafka2:9093,kafka3:9094") \
+    .option("topic", "sensor-processed") \
+    .option("checkpointLocation", "/home/jovyan/data/checkpoints/sensor_processed_kafka") \
+    .outputMode("append") \
+    .start()
 
 debug_query = silver_df.writeStream \
     .format("console") \

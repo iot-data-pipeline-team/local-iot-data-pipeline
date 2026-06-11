@@ -41,8 +41,7 @@ log = logging.getLogger(__name__)
 
 # Host default uses EXTERNAL listeners from docker-compose (19092-19094).
 # Inside Docker network use: kafka1:9092,kafka2:9093,kafka3:9094
-KAFKA_BOOTSTRAP ='localhost:9094'
-
+KAFKA_BOOTSTRAP = "localhost:19092,localhost:19093,localhost:19094"
 TOPIC = "sensor-events"
 INTERVAL   = 1.0       # seconds between each machine reading
 
