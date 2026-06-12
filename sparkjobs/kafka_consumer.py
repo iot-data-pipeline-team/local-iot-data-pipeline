@@ -3,8 +3,18 @@ from pyspark.sql.functions import *
 from pyspark.sql.types import *
 from schema_df import iot_schema
 from transformations import apply_transformations
-from aggregations import machine_summary
-from WriteToPostgrSQL import write_to_postgres_bronze, write_to_postgres_silver, write_to_postgres_gold
+from aggregations import (
+    machine_summary,
+    hourly_summary,
+    shift_summary
+)
+from WriteToPostgrSQL import ( 
+    write_to_postgres_bronze, 
+    write_to_postgres_silver, 
+    write_to_postgres_machine_summary,
+    write_to_postgres_hourly_summary,
+    write_to_postgres_shift_summary 
+    )
 
 # =============================================
 spark = (
@@ -105,8 +115,19 @@ enhanced_df = apply_transformations(enhanced_df)
 # ==========================================================
 # apply aggregations
 
-aggregated_df = enhanced_df
-aggregated_df = machine_summary(aggregated_df)
+machine_summary_df = machine_summary(enhanced_df)
+
+enhanced_df_watermarked = (
+    enhanced_df
+    .withWatermark(
+        "event_time",
+        "10 minutes"
+    )
+)
+
+hourly_summary_df = hourly_summary(enhanced_df_watermarked)
+
+shift_summary_df = shift_summary(enhanced_df)
 
 
 # query = (
@@ -117,31 +138,61 @@ aggregated_df = machine_summary(aggregated_df)
 #     .start()
 # )
 
-query_bronze = (
-    flat_df
-    .writeStream
-    .foreachBatch(write_to_postgres_bronze)# write to postgres
-    .outputMode("append")
-    .start()
-)
+# query_bronze = (
+#     flat_df
+#     .writeStream
+#     .foreachBatch(write_to_postgres_bronze)# write to postgres
+#     .option("checkpointLocation", "checkpoints/bronze")
+#     .outputMode("append")
+#     .start()
+# )
 
 
-query_silver = (
-    enhanced_df
-    .writeStream
-    .foreachBatch(write_to_postgres_silver)# write to postgres
-    .outputMode("append")
-    .start()
-)
+# query_silver = (
+#     enhanced_df
+#     .writeStream
+#     .foreachBatch(write_to_postgres_silver)# write to postgres
+#     .option("checkpointLocation", "checkpoints/silver")
+#     .outputMode("append")
+#     .start()
+# )
 
-query_gold = (
-    aggregated_df
-    .writeStream
-    .foreachBatch(write_to_postgres_gold)# write to postgres
+# query_machine_summary = (
+#     machine_summary_df
+#     .writeStream
+#     .outputMode("complete")
+#     .format("console")
+#     .option("truncate", False)
+#     .start()
+# )
+
+# query_machine_summary = (
+#     machine_summary_df.writeStream
+#     .foreachBatch(write_to_postgres_machine_summary)
+#     .option("checkpointLocation", "checkpoints/machine_summary")
+#     .outputMode("complete")
+#     .option("truncate", False)
+#     .start()
+# )
+
+
+# query_hourly_summary = (
+#     hourly_summary_df.writeStream
+#     .foreachBatch(write_to_postgres_hourly_summary)
+#     .option("checkpointLocation", "checkpoints/hourly_summary")
+#     .outputMode("complete")
+#     .option("truncate", False)
+#     .start()
+# )
+
+query_shift_summary = (
+    shift_summary_df.writeStream
+    .foreachBatch(write_to_postgres_shift_summary)
+    .option("checkpointLocation", "checkpoints/shift_summary")
     .outputMode("complete")
+    .option("truncate", False)
     .start()
 )
-
 
 
 
