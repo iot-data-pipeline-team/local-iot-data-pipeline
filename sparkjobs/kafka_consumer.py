@@ -157,33 +157,33 @@ shift_summary_df = shift_summary(enhanced_df)
 #     .start()
 # )
 
-# query_machine_summary = (
-#     machine_summary_df
-#     .writeStream
-#     .outputMode("complete")
-#     .format("console")
-#     .option("truncate", False)
-#     .start()
-# )
+query_machine_summary = (
+    machine_summary_df
+    .writeStream
+    .outputMode("complete")
+    .format("console")
+    .option("truncate", False)
+    .start()
+)
 
-# query_machine_summary = (
-#     machine_summary_df.writeStream
-#     .foreachBatch(write_to_postgres_machine_summary)
-#     .option("checkpointLocation", "checkpoints/machine_summary")
-#     .outputMode("complete")
-#     .option("truncate", False)
-#     .start()
-# )
+query_machine_summary = (
+    machine_summary_df.writeStream
+    .foreachBatch(write_to_postgres_machine_summary)
+    .option("checkpointLocation", "checkpoints/machine_summary")
+    .outputMode("complete")
+    .option("truncate", False)
+    .start()
+)
 
 
-# query_hourly_summary = (
-#     hourly_summary_df.writeStream
-#     .foreachBatch(write_to_postgres_hourly_summary)
-#     .option("checkpointLocation", "checkpoints/hourly_summary")
-#     .outputMode("complete")
-#     .option("truncate", False)
-#     .start()
-# )
+query_hourly_summary = (
+    hourly_summary_df.writeStream
+    .foreachBatch(write_to_postgres_hourly_summary)
+    .option("checkpointLocation", "checkpoints/hourly_summary")
+    .outputMode("complete")
+    .option("truncate", False)
+    .start()
+)
 
 query_shift_summary = (
     shift_summary_df.writeStream
