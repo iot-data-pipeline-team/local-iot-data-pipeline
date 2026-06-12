@@ -1,7 +1,36 @@
-data/
-*.parquet
-checkpoints/
-.env
+# Python
 __pycache__/
-*.pyc
+*.py[cod]
+
+# Virtual Environments
+venv/
+.venv/
+env/
+bigdata/
+
+# Spark
+spark-warehouse/
+metastore_db/
+derby.log
+
+# Spark Streaming
+checkpoints/
+**/checkpoints/
+
+# Logs
+*.log
+logs/
+
+# IDE
+.vscode/
+.idea/
+
+# Environment Variables
+.env
+
+# Jupyter
 .ipynb_checkpoints/
+
+# OS Files
+.DS_Store
+Thumbs.db
