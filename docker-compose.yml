@@ -214,7 +214,11 @@ services:
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.13.0
     healthcheck:
-      test: ["CMD-SHELL", "curl -s http://localhost:9200 >/dev/null || exit 1"]
+      test:
+        [
+          "CMD-SHELL",
+          "curl -s http://localhost:9200/_cluster/health | grep -E 'green|yellow' || exit 1"
+        ]
       interval: 10s
       timeout: 10s
       retries: 10    
@@ -244,9 +248,13 @@ services:
 
         echo 'Applying template...'
 
-        curl -X PUT http://elasticsearch:9200/_index_template/machine_template -H 'Content-Type: application/json' -d @/templates/machine_template.json
+        curl -f -X PUT http://elasticsearch:9200/_index_template/machine_template -H 'Content-Type: application/json' -d @/templates/machine_template.json
 
-        curl -X PUT http://elasticsearch:9200/_index_template/machine_aggregates_template -H 'Content-Type: application/json' -d @/templates/machine_aggregates_template.json
+        curl -f -X PUT http://elasticsearch:9200/_index_template/machine_aggregates_template -H 'Content-Type: application/json' -d @/templates/machine_aggregates_template.json
+
+        curl -f -X PUT http://elasticsearch:9200/machine-events
+
+        curl -f -X PUT http://elasticsearch:9200/machine-aggregates
 
         echo 'Template applied successfully.'
       "

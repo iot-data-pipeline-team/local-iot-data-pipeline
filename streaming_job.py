@@ -214,11 +214,11 @@ silver_kafka_query = silver_kafka_df.writeStream \
     .outputMode("append") \
     .start()
 
-debug_query = silver_df.writeStream \
-    .format("console") \
-    .outputMode("append") \
-    .trigger(processingTime="2 seconds") \
-    .start()
+# debug_query = silver_df.writeStream \
+#     .format("console") \
+#     .outputMode("append") \
+#     .trigger(processingTime="2 seconds") \
+#     .start()
 
 def write_bronze_to_minio(batch_df, batch_id):
 
@@ -289,7 +289,7 @@ gold_minio_query = gold_df.writeStream \
 
 def write_bronze_to_postgres(batch_df, batch_id):
 
-    print(f"[BRONZE] Batch {batch_id}, rows: {batch_df.count()}")
+    print(f"[BRONZE] Batch {batch_id}")
 
     batch_df.select(
         "event_id",
@@ -337,7 +337,7 @@ bronze_postgres_query = bronze_df.writeStream \
 
 def write_silver_to_postgres(batch_df, batch_id):
 
-    print(f"[POSTGRES] Batch {batch_id}, rows: {batch_df.count()}")
+    print(f"[POSTGRES] Batch {batch_id}")
 
     batch_df.select(
         "event_id",
@@ -406,12 +406,10 @@ silver_postgres_query = silver_df.writeStream \
 
 def write_gold_to_postgres(batch_df, batch_id):
 
-    count = batch_df.count()
 
-    print(f"[AGG] Batch {batch_id}, rows: {count}")
+    print(f"[AGG] Batch {batch_id}")
 
-    if count > 0:
-        batch_df.show(truncate=False)
+
 
     batch_df = batch_df.select(
         col("machine_id"),
@@ -455,12 +453,17 @@ gold_postgres_query = gold_df.writeStream \
 
 
 def write_silver_to_es(batch_df, batch_id):
-    batch_df.write \
-        .format("org.elasticsearch.spark.sql") \
-        .option("es.nodes", "elasticsearch") \
-        .option("es.port", "9200") \
-        .mode("append") \
-        .save("machine-events")
+    try:    
+        batch_df.write \
+            .format("org.elasticsearch.spark.sql") \
+            .option("es.nodes", "elasticsearch") \
+            .option("es.port", "9200") \
+            .option("es.index.auto.create", "true") \
+            .mode("append") \
+            .save("machine-events")
+    except Exception as e:
+        print(f"[FATAL] Elasticsearch write failed: {e}")
+        raise e    
 
 
 
@@ -472,27 +475,30 @@ silver_elastic_query = silver_df.writeStream \
 
 
 def write_gold_to_es(batch_df, batch_id):
-
-    batch_df.select(
-        col("machine_id"),
-        col("window_start"),
-        col("window_end"),
-        col("avg_temp"),
-        col("avg_rpm"),
-        col("avg_vibration"),
-        col("avg_power"),
-        col("avg_health_score"),
-        col("min_health_score"),
-        col("fault_count"),
-        col("fault_percentage"),
-        col("total_events")
-    ).write \
-     .format("org.elasticsearch.spark.sql") \
-     .option("es.nodes", "elasticsearch") \
-     .option("es.port", "9200") \
-     .mode("append") \
-     .save("machine-aggregates")
-
+    try:
+        batch_df.select(
+            col("machine_id"),
+            col("window_start"),
+            col("window_end"),
+            col("avg_temp"),
+            col("avg_rpm"),
+            col("avg_vibration"),
+            col("avg_power"),
+            col("avg_health_score"),
+            col("min_health_score"),
+            col("fault_count"),
+            col("fault_percentage"),
+            col("total_events")
+        ).write \
+        .format("org.elasticsearch.spark.sql") \
+        .option("es.nodes", "elasticsearch") \
+        .option("es.port", "9200") \
+        .option("es.index.auto.create", "true") \
+        .mode("append") \
+        .save("machine-aggregates")
+    except Exception as e:
+        print(f"[FATAL] Elasticsearch write failed: {e}")
+        raise e
 
 
 
