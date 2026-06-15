@@ -342,3 +342,343 @@ Per floor and time bucket
 - Average Power Consumption
 - Fault Count
 - Average Health Score
+
+# Running the Project
+
+This section describes how to run the complete Real-Time IoT Data Pipeline locally.
+
+---
+
+## Prerequisites
+
+Make sure the following software is installed:
+
+* Git
+* Docker & Docker Compose
+* Python 3.11+
+* Conda (recommended)
+* Java 17+
+* Apache Spark 3.5+
+
+---
+
+## 1. Clone the Repository
+
+```bash
+git clone https://github.com/iot-data-pipeline-team/local-iot-data-pipeline.git
+
+cd local-iot-data-pipeline
+```
+
+---
+
+## 2. Create and Activate Python Environment
+
+Create a Conda environment:
+
+```bash
+conda create -n bigdata python=3.11
+
+conda activate bigdata
+```
+
+Install the required packages manually:
+
+```bash
+pip install pyspark kafka-python psycopg2-binary
+```
+
+If additional packages are used in the project, install them as needed.
+
+---
+
+## 3. Start Infrastructure
+
+Start PostgreSQL and the Kafka cluster:
+
+```bash
+docker compose up -d
+```
+
+Verify that all containers are running:
+
+```bash
+docker ps
+```
+
+Expected containers:
+
+* kafka-1
+* kafka-2
+* kafka-3
+* postgres
+
+---
+
+## 4. Create PostgreSQL Database Tables
+
+Connect to PostgreSQL:
+
+```bash
+docker exec -it data-postgres1 psql -U admin -d data_hub
+```
+
+Create the following tables:
+
+### Bronze Layer
+
+```text
+iot_events
+```
+
+### Silver Layer
+
+```text
+iot_events_enhanced
+```
+
+### Gold Layer
+
+```text
+machine_summary
+hourly_summary
+shift_summary
+```
+
+Use the SQL definitions provided in the README.
+
+---
+
+## 5. Start the Kafka Producer
+
+Open a new terminal:
+
+```bash
+python kafka_producer.py
+```
+
+The producer continuously generates simulated IoT machine events and publishes them to Kafka.
+
+Generate a fixed number of events:
+
+```bash
+python kafka_producer.py --count 100
+```
+
+Run at maximum speed:
+
+```bash
+python kafka_producer.py --interval 0
+```
+
+---
+
+## 6. Start the Spark Streaming Consumer
+
+Open another terminal:
+
+```bash
+cd sparkJobs
+
+python kafka_consumer.py
+```
+
+The consumer performs the following steps:
+
+1. Reads streaming data from Kafka
+2. Parses and validates JSON messages
+3. Flattens nested sensor data
+4. Applies business transformations
+5. Generates aggregations
+6. Loads data into PostgreSQL
+
+---
+
+## 7. Verify Bronze Layer
+
+Connect to PostgreSQL:
+
+```bash
+docker exec -it data-postgres1 psql -U admin -d data_hub
+```
+
+Run:
+
+```sql
+SELECT * FROM iot_events LIMIT 10;
+```
+
+This table stores raw events exactly as received from Kafka.
+
+---
+
+## 8. Verify Silver Layer
+
+Run:
+
+```sql
+SELECT * FROM iot_events_enhanced LIMIT 10;
+```
+
+This table contains transformed events including:
+
+* temperature_status
+* vibration_status
+* fault_flag
+* event_date
+* event_hour
+* health_score
+* risk_score
+* uptime_flag
+* time_bucket
+
+---
+
+## 9. Verify Gold Layer
+
+### Machine Summary
+
+```sql
+SELECT * FROM machine_summary;
+```
+
+Metrics include:
+
+* Total Events
+* Average Temperature
+* Maximum Temperature
+* Average Vibration
+* Maximum Vibration
+* Average RPM
+* Average Power Consumption
+* Peak Power Consumption
+* Average Health Score
+* Average Risk Score
+* Fault Count
+* Fault Percentage
+* Uptime Percentage
+
+---
+
+### Hourly Summary
+
+```sql
+SELECT * FROM hourly_summary;
+```
+
+Metrics include:
+
+* Event Hour
+* Machine ID
+* Total Events
+* Average Temperature
+* Average RPM
+* Average Power Consumption
+* Fault Count
+
+---
+
+### Shift Summary
+
+```sql
+SELECT * FROM shift_summary;
+```
+
+Metrics include:
+
+* Event Date
+* Time Bucket
+* Floor
+* Total Events
+* Average Temperature
+* Average Power Consumption
+* Fault Count
+* Average Health Score
+
+---
+
+## Streaming Checkpoints
+
+Spark Structured Streaming uses checkpoints to support fault tolerance and recovery.
+
+```text
+checkpoints/
+├── bronze/
+├── silver/
+├── machine_summary/
+├── hourly_summary/
+└── shift_summary/
+```
+
+To restart processing from scratch:
+
+```bash
+rm -rf checkpoints/
+```
+
+---
+
+## Stopping the Project
+
+Stop Spark Streaming:
+
+```bash
+Ctrl + C
+```
+
+Stop Docker services:
+
+```bash
+docker compose down
+```
+
+Remove all containers and volumes:
+
+```bash
+docker compose down -v
+```
+
+---
+
+## End-to-End Data Flow
+
+```text
+IoT Machines
+      │
+      ▼
+Kafka Producer
+      │
+      ▼
+Kafka Cluster (3 Brokers)
+      │
+      ▼
+Spark Structured Streaming
+      │
+      ├── Bronze Layer
+      │       └── iot_events
+      │
+      ├── Silver Layer
+      │       └── iot_events_enhanced
+      │
+      └── Gold Layer
+              ├── machine_summary
+              ├── hourly_summary
+              └── shift_summary
+      │
+      ▼
+PostgreSQL
+```
+
+---
+
+## Expected Pipeline Output
+
+After running the producer and consumer:
+
+* Raw machine events are stored in `iot_events`
+* Enriched events are stored in `iot_events_enhanced`
+* Machine KPIs are stored in `machine_summary`
+* Hourly KPIs are stored in `hourly_summary`
+* Shift-based KPIs are stored in `shift_summary`
+
+The pipeline continuously updates analytics tables in near real time as new sensor events arrive.
