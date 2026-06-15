@@ -53,7 +53,6 @@ local-iot-data-pipeline/
 │   └── WriteToPostgrSQL.py
 │
 ├── docker-compose.yml
-├── requirements.txt
 ├── .gitignore
 └── README.md
 ```
