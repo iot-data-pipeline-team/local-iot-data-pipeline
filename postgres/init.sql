@@ -1,3 +1,52 @@
+CREATE TABLE worker_events_bronze (
+
+    worker_id VARCHAR(50),
+
+    timestamp TIMESTAMPTZ,
+
+    floor VARCHAR(10),
+
+    helmet_on BOOLEAN,
+
+    danger_zone BOOLEAN,
+
+    fatigue_score DOUBLE PRECISION
+);
+
+CREATE TABLE worker_events_silver (
+
+    worker_id VARCHAR(50),
+
+    timestamp TIMESTAMPTZ,
+
+    floor VARCHAR(10),
+
+    helmet_on BOOLEAN,
+
+    danger_zone BOOLEAN,
+
+    fatigue_score DOUBLE PRECISION,
+
+    safety_violation_flag INTEGER,
+
+    fatigue_status VARCHAR(20),
+
+    worker_risk_level VARCHAR(20)
+);
+
+CREATE TABLE worker_safety_gold (
+
+    window_start TIMESTAMPTZ,
+
+    window_end TIMESTAMPTZ,
+
+    violations_per_hour BIGINT,
+
+    workers_in_danger_zone BIGINT,
+
+    avg_fatigue_score DOUBLE PRECISION
+);
+
 CREATE TABLE IF NOT EXISTS machine_events_quarantine (
 
     event_id VARCHAR(100),

@@ -714,5 +714,450 @@ gold_elastic_query = gold_df.writeStream \
 
 
 
+##----------------------------- Workers Code -----------------
+
+worker_schema = StructType([
+    StructField(
+        "worker_id",
+        StringType()
+    ),
+
+    StructField(
+        "timestamp",
+        StringType()
+    ),
+
+    StructField(
+        "floor",
+        StringType()
+    ),
+
+    StructField(
+        "helmet_on",
+        BooleanType()
+    ),
+
+    StructField(
+        "danger_zone",
+        BooleanType()
+    ),
+
+    StructField(
+        "fatigue_score",
+        IntegerType()
+    )
+])
+
+
+worker_raw_df = (
+    spark.readStream
+    .format("kafka")
+    .option(
+        "kafka.bootstrap.servers",
+        "kafka1:9092,kafka2:9093,kafka3:9094"
+    )
+    .option(
+        "subscribe",
+        "worker-events"
+    )
+    .load()
+)
+
+worker_bronze_df = (
+    worker_raw_df
+    .selectExpr("CAST(value AS STRING)")
+    .select(
+        from_json(
+            col("value"),
+            worker_schema
+        ).alias("data")
+    )
+    .select("data.*")
+)
+
+worker_bronze_df = (
+    worker_bronze_df
+    .withColumn(
+        "timestamp",
+        to_timestamp(col("timestamp"))
+    )
+)
+
+
+
+worker_silver_df = (
+    worker_bronze_df
+
+    .withColumn(
+        "safety_violation_flag",
+
+        when(
+            col("helmet_on") == False,
+            1
+        ).otherwise(0)
+    )
+
+    .withColumn(
+        "fatigue_status",
+
+        when(
+            col("fatigue_score") > 80,
+            "High"
+        )
+        .when(
+            col("fatigue_score") > 50,
+            "Medium"
+        )
+        .otherwise("Low")
+    )
+
+    .withColumn(
+        "worker_risk_level",
+
+        when(
+            (col("danger_zone") == True)
+            &
+            (col("fatigue_score") > 80),
+            "Critical"
+        )
+        .when(
+            col("danger_zone") == True,
+            "High"
+        )
+        .otherwise("Normal")
+    )
+)
+
+
+worker_gold_df = (
+    worker_silver_df
+
+    .withWatermark(
+        "timestamp",
+        "1 minute"
+    )
+
+    .groupBy(
+        window(
+            col("timestamp"),
+            "5 minutes"
+        )
+    )
+
+    .agg(
+
+        sum(
+            "safety_violation_flag"
+        ).alias(
+            "violations_per_hour"
+        ),
+
+        sum(
+            when(
+                col("danger_zone"),
+                1
+            ).otherwise(0)
+        ).alias(
+            "workers_in_danger_zone"
+        ),
+
+        avg(
+            "fatigue_score"
+        ).alias(
+            "avg_fatigue_score"
+        )
+    )
+)
+
+worker_gold_df = (
+    worker_gold_df
+
+    .select(
+        col("window.start")
+        .alias("window_start"),
+
+        col("window.end")
+        .alias("window_end"),
+
+        col("violations_per_hour"),
+
+        col("workers_in_danger_zone"),
+
+        col("avg_fatigue_score")
+    )
+)
+
+def write_worker_bronze_to_postgres(
+    batch_df,
+    batch_id
+):
+
+    print(
+        f"[WORKER BRONZE] Batch {batch_id}"
+    )
+
+    batch_df.select(
+        "worker_id",
+        "timestamp",
+        "floor",
+        "helmet_on",
+        "danger_zone",
+        "fatigue_score"
+    ).write \
+        .format("jdbc") \
+        .option(
+            "url",
+            "jdbc:postgresql://postgres:5432/db"
+        ) \
+        .option(
+            "dbtable",
+            "worker_events_bronze"
+        ) \
+        .option("user", "user") \
+        .option("password", "password") \
+        .option(
+            "driver",
+            "org.postgresql.Driver"
+        ) \
+        .mode("append") \
+        .save()
+    
+
+worker_bronze_postgres_query = (
+    worker_bronze_df
+    .writeStream
+    .foreachBatch(
+        write_worker_bronze_to_postgres
+    )
+    .trigger(
+        processingTime="2 seconds"
+    )
+    .option(
+        "checkpointLocation",
+        "/home/jovyan/data/checkpoints/worker_bronze_postgres"
+    )
+    .start()
+)
+
+
+def write_worker_silver_to_postgres(
+    batch_df,
+    batch_id
+):
+
+    print(
+        f"[WORKER SILVER] Batch {batch_id}"
+    )
+
+    batch_df.select(
+        "worker_id",
+        "timestamp",
+        "floor",
+        "helmet_on",
+        "danger_zone",
+        "fatigue_score",
+        "safety_violation_flag",
+        "fatigue_status",
+        "worker_risk_level"
+    ).write \
+        .format("jdbc") \
+        .option(
+            "url",
+            "jdbc:postgresql://postgres:5432/db"
+        ) \
+        .option(
+            "dbtable",
+            "worker_events_silver"
+        ) \
+        .option("user", "user") \
+        .option("password", "password") \
+        .option(
+            "driver",
+            "org.postgresql.Driver"
+        ) \
+        .mode("append") \
+        .save()
+    
+
+worker_silver_postgres_query = (
+    worker_silver_df
+    .writeStream
+    .foreachBatch(
+        write_worker_silver_to_postgres
+    )
+    .trigger(
+        processingTime="2 seconds"
+    )
+    .option(
+        "checkpointLocation",
+        "/home/jovyan/data/checkpoints/worker_silver_postgres"
+    )
+    .start()
+)
+
+
+
+
+def write_worker_gold_to_postgres(
+    batch_df,
+    batch_id
+):
+
+    print(
+        f"[WORKER GOLD] Batch {batch_id}"
+    )
+
+    batch_df.write \
+        .format("jdbc") \
+        .option(
+            "url",
+            "jdbc:postgresql://postgres:5432/db"
+        ) \
+        .option(
+            "dbtable",
+            "worker_safety_gold"
+        ) \
+        .option("user", "user") \
+        .option("password", "password") \
+        .option(
+            "driver",
+            "org.postgresql.Driver"
+        ) \
+        .mode("append") \
+        .save()
+    
+worker_gold_postgres_query = (
+    worker_gold_df
+    .writeStream
+    .outputMode("update")
+    .foreachBatch(
+        write_worker_gold_to_postgres
+    )
+    .option(
+        "checkpointLocation",
+        "/home/jovyan/data/checkpoints/worker_gold_postgres"
+    )
+    .start()
+)
+
+def write_worker_silver_to_es(
+    batch_df,
+    batch_id
+):
+    try:
+
+        batch_df.select(
+            "worker_id",
+            "timestamp",
+            "floor",
+            "helmet_on",
+            "danger_zone",
+            "fatigue_score",
+            "safety_violation_flag",
+            "fatigue_status",
+            "worker_risk_level"
+        ).write \
+        .format(
+            "org.elasticsearch.spark.sql"
+        ) \
+        .option(
+            "es.nodes",
+            "elasticsearch"
+        ) \
+        .option(
+            "es.port",
+            "9200"
+        ) \
+        .option(
+            "es.index.auto.create",
+            "true"
+        ) \
+        .mode("append") \
+        .save(
+            "worker-events"
+        )
+
+    except Exception as e:
+
+        print(
+            f"[FATAL] Worker ES write failed: {e}"
+        )
+
+        raise e
+    
+
+worker_silver_elastic_query = (
+    worker_silver_df
+    .writeStream
+    .foreachBatch(
+        write_worker_silver_to_es
+    )
+    .trigger(
+        processingTime="2 seconds"
+    )
+    .option(
+        "checkpointLocation",
+        "/home/jovyan/data/checkpoints/worker_silver_elastic"
+    )
+    .start()
+)
+
+
+def write_worker_gold_to_es(
+    batch_df,
+    batch_id
+):
+    try:
+
+        batch_df.select(
+            "window_start",
+            "window_end",
+            "violations_per_hour",
+            "workers_in_danger_zone",
+            "avg_fatigue_score"
+        ).write \
+        .format(
+            "org.elasticsearch.spark.sql"
+        ) \
+        .option(
+            "es.nodes",
+            "elasticsearch"
+        ) \
+        .option(
+            "es.port",
+            "9200"
+        ) \
+        .option(
+            "es.index.auto.create",
+            "true"
+        ) \
+        .mode("append") \
+        .save(
+            "worker-safety"
+        )
+
+    except Exception as e:
+
+        print(
+            f"[FATAL] Worker Gold ES write failed: {e}"
+        )
+
+        raise e
+    
+worker_gold_elastic_query = (
+    worker_gold_df
+    .writeStream
+    .outputMode("update")
+    .foreachBatch(
+        write_worker_gold_to_es
+    )
+    .option(
+        "checkpointLocation",
+        "/home/jovyan/data/checkpoints/worker_gold_elastic"
+    )
+    .start()
+)    
+
+
 
 spark.streams.awaitAnyTermination()

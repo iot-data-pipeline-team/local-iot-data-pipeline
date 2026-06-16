@@ -66,3 +66,5 @@ echo Starting IoT Producer...
 echo ====================================
 
 start cmd /k ".\venv\Scripts\python.exe producer\ahmed_producer.py"
+
+start cmd /k ".\venv\Scripts\python.exe producer\worker_producer.py"

@@ -134,6 +134,7 @@ services:
 
         kafka-topics --create --if-not-exists --topic sensor-processed --bootstrap-server kafka1:9092 --partitions 6 --replication-factor 3
 
+        kafka-topics --create --if-not-exists --topic worker-events --bootstrap-server kafka1:9092 --partitions 6 --replication-factor 3
         echo 'Kafka topic created successfully.'
       "
     networks:
