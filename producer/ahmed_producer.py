@@ -148,7 +148,25 @@ def apply_fault(fault_type, m):
         )
     return (m["base_temp"], m["base_vib"], m["base_rpm"], None)
 
+def inject_dirty_data(event):
 
+    # 3% missing temperature
+    if random.random() < 0.03:
+        event["metrics"]["temperature"] = None
+
+    # 2% impossible temperature
+    if random.random() < 0.02:
+        event["metrics"]["temperature"] = 999
+
+    # 1% negative rpm
+    if random.random() < 0.01:
+        event["metrics"]["rpm"] = -500
+
+    # 1% empty machine id
+    if random.random() < 0.01:
+        event["machine_id"] = ""
+
+    return event
 
 # ── GENERATE ONE READING ──────────────────────────────────────────
 
@@ -254,6 +272,7 @@ def generate_reading(m):
                 + (0.6 if is_fault else 0), 3
             ),
         }
+    event = inject_dirty_data(event)
 
     return event
 
@@ -285,7 +304,7 @@ def main(interval, count):
     print("┌─────────────────────────────────────────────────────────────┐")
     print("│  IoT Kafka Producer — Round-Robin                           │")
     print("│  CNC_01 → ROB_01 → CNV_01 → PMP_01 → repeat                │")
-    print(f"│  Brokers: {', '.join(KAFKA_BOOTSTRAP):<47}│")
+    print(f"│  Brokers: {KAFKA_BOOTSTRAP:<47}│")
     print(f"│  Topic:   {TOPIC:<47}  │")
     print(f"│  Interval: {interval}s  |  Target: {'∞' if count == 0 else count} events{' ' * 20}│")
     print("└─────────────────────────────────────────────────────────────┘\n")
@@ -313,6 +332,14 @@ def main(interval, count):
                 icon  = {"running": "🟢", "idle": "🟡", "fault": "🔴"}.get(event["status"], "⚪")
                 ferr  = f"  ⚠️  {event['error_code']}" if event["is_fault"] else ""
                 mtype = event["machine_type"]
+                
+                temp = event["metrics"]["temperature"]
+
+                temp_display = (
+                    "NULL"
+                    if temp is None
+                    else f"{temp:>5}"
+                )                
 
                 if mtype == "cnc_machine":
                     s     = event["cnc_sensors"]
@@ -332,7 +359,7 @@ def main(interval, count):
                     f"partition={record_metadata.partition}  "
                     f"{event['machine_id']:<8}  "
                     f"{icon} {event['status']:<8}  "
-                    f"temp={event['metrics']['temperature']:>5}°C  "
+                    f"temp={temp_display}°C  "                    
                     f"rpm={event['metrics']['rpm']:>7}  "
                     f"{extra}"
                     f"{ferr}"

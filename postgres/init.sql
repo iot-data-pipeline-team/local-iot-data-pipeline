@@ -1,3 +1,43 @@
+CREATE TABLE IF NOT EXISTS machine_events_quarantine (
+
+    event_id VARCHAR(100),
+
+    timestamp TIMESTAMPTZ,
+
+    machine_id VARCHAR(50),
+
+    machine_type VARCHAR(50),
+
+    floor VARCHAR(10),
+    shift VARCHAR(20),
+
+    status VARCHAR(20),
+    error_code VARCHAR(20),
+
+    is_fault BOOLEAN,
+
+    temperature DOUBLE PRECISION,
+    vibration DOUBLE PRECISION,
+    rpm DOUBLE PRECISION,
+    power_kw DOUBLE PRECISION,
+
+    cnc_oil DOUBLE PRECISION,
+    coolant_pressure DOUBLE PRECISION,
+
+    joint_torque DOUBLE PRECISION,
+    force DOUBLE PRECISION,
+
+    belt_tension DOUBLE PRECISION,
+    load_weight DOUBLE PRECISION,
+
+    flow_rate DOUBLE PRECISION,
+    inlet_pressure DOUBLE PRECISION,
+
+    validation_reason VARCHAR(255)
+);
+
+
+
 CREATE TABLE IF NOT EXISTS machine_events_bronze (
     event_id VARCHAR(100),
     timestamp TIMESTAMPTZ,
@@ -32,15 +72,15 @@ CREATE TABLE IF NOT EXISTS machine_events_bronze (
 );
 
 
-
 CREATE TABLE IF NOT EXISTS machine_events_silver (
+
     event_id VARCHAR(100) PRIMARY KEY,
     timestamp TIMESTAMPTZ,
 
     machine_id VARCHAR(50),
     machine_type VARCHAR(50),
 
-    floor VARCHAR(10),
+    floor VARCHAR(20),
     shift VARCHAR(20),
 
     status VARCHAR(20),
@@ -75,28 +115,47 @@ CREATE TABLE IF NOT EXISTS machine_events_silver (
 
     health_score DOUBLE PRECISION,
 
+    risk_score DOUBLE PRECISION,
+
+    running_flag INTEGER,
+
+    fault_category VARCHAR(50),
+
+    power_status VARCHAR(20),
+
+    time_bucket VARCHAR(20),
+
     anomaly_flag INTEGER
 );
-
 CREATE TABLE IF NOT EXISTS machine_aggregates_gold (
+
     machine_id VARCHAR(50),
 
-    window_start TIMESTAMP,
-    window_end TIMESTAMP,
+    window_start TIMESTAMPTZ,
+    window_end TIMESTAMPTZ,
 
     avg_temp DOUBLE PRECISION,
+    max_temp DOUBLE PRECISION,
+
     avg_rpm DOUBLE PRECISION,
+
     avg_vibration DOUBLE PRECISION,
+    max_vibration DOUBLE PRECISION,
+
     avg_power DOUBLE PRECISION,
+    peak_power DOUBLE PRECISION,
 
     avg_health_score DOUBLE PRECISION,
     min_health_score DOUBLE PRECISION,
 
-    fault_count BIGINT,
-    fault_percentage DOUBLE PRECISION,
-    total_events BIGINT
+    avg_risk_score DOUBLE PRECISION,
 
-   
+    uptime_percentage DOUBLE PRECISION,
+
+    fault_count BIGINT,
+    total_events BIGINT,
+
+    fault_percentage DOUBLE PRECISION
 );
 
 
@@ -149,11 +208,19 @@ SELECT
     event_hour,
 
     health_score,
+    risk_score,
+
+    running_flag,
+
+    fault_category,
+
+    power_status,
+
+    time_bucket,
 
     anomaly_flag
 
 FROM machine_events_silver;
-
 
 
 CREATE OR REPLACE VIEW machine_aggregates_gold_view AS
@@ -170,12 +237,22 @@ SELECT
         AS cairo_window_end,
 
     avg_temp,
+    max_temp,
+
     avg_rpm,
+
     avg_vibration,
+    max_vibration,
+
     avg_power,
+    peak_power,
 
     avg_health_score,
     min_health_score,
+
+    avg_risk_score,
+
+    uptime_percentage,
 
     fault_count,
     fault_percentage,

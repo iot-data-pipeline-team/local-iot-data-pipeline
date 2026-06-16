@@ -53,7 +53,26 @@
 
         "fault_percentage": {
           "type": "float"
-        }
+        },
+      
+        "max_temp": {
+          "type": "float"
+        },
+        "max_vibration": {
+          "type": "float"
+        },
+        "peak_power": {
+          "type": "float"
+        },
+        "avg_risk_score": {
+          "type": "float"
+        },
+        "uptime_percentage": {
+          "type": "float"
+        },
+        "risk_score": {
+          "type": "float"
+        }        
       }
     }
   }

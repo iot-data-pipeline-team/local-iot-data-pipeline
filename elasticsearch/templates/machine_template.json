@@ -41,7 +41,26 @@
         "load_weight": { "type": "float" },
 
         "flow_rate": { "type": "float" },
-        "inlet_pressure": { "type": "float" }
+        "inlet_pressure": { "type": "float" },
+        "risk_score": {
+          "type": "float"
+        },
+
+        "running_flag": {
+          "type": "integer"
+        },
+
+        "fault_category": {
+          "type": "keyword"
+        },
+
+        "power_status": {
+          "type": "keyword"
+        },
+
+        "time_bucket": {
+          "type": "keyword"
+        }        
       }
     }
   }

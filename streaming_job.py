@@ -1,7 +1,7 @@
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import to_date, hour, lit, sum, count, min, greatest
 from pyspark.sql.functions import when, window, avg, to_timestamp, from_json, col
-from pyspark.sql.functions import to_json, struct
+from pyspark.sql.functions import to_json, struct, max
 from pyspark.sql.types import *
 
 spark = SparkSession.builder \
@@ -118,7 +118,45 @@ bronze_df = bronze_df.select(
     col("pump_sensors.inlet_pressure_bar").alias("inlet_pressure")
 )
 
-silver_df = bronze_df \
+invalid_df = bronze_df.withColumn(
+    "validation_reason",
+
+    when(
+        col("temperature").isNull(),
+        "NULL_TEMPERATURE"
+    )
+
+    .when(
+        ~col("temperature").between(-20,150),
+        "TEMPERATURE_OUT_OF_RANGE"
+    )
+
+    .when(
+        col("rpm") < 0,
+        "INVALID_RPM"
+    )
+
+    .when(
+        col("machine_id") == "",
+        "EMPTY_MACHINE_ID"
+    )
+
+).filter(
+    col("validation_reason").isNotNull()
+)
+
+
+valid_df = bronze_df.filter(
+    col("temperature").isNotNull()
+).filter(
+    col("temperature").between(-20,150)
+).filter(
+    col("rpm") >= 0
+).filter(
+    col("machine_id") != ""
+)
+
+silver_df = valid_df  \
     .filter(col("machine_id").isNotNull()) \
     .filter(col("timestamp").isNotNull()) \
     .filter(col("temperature").between(-20, 150)) \
@@ -154,8 +192,28 @@ silver_df = bronze_df \
                 - col("vibration") * 5
             )
         )
-        .alias("health_score")
-    )
+        .alias("health_score"),
+        (col("temperature") * 0.4 + col("vibration") * 10).alias("risk_score"),
+        when(col("status") == "running", 1).otherwise(0).alias("running_flag"),
+
+        when(col("error_code").isin("E001", "E003"), "Overheat")
+        .when(col("error_code").isin("E002", "E004"), "Vibration")
+        .when(col("error_code") == "E005", "RPM Drop")
+        .otherwise("None").alias("fault_category"),
+
+        when(col("power_kw") > 5, "High")
+        .when(col("power_kw") > 3, "Normal")
+        .otherwise("Low")
+        .alias("power_status"),
+
+        when(hour(col("timestamp")).between(6, 13), "Morning")
+        .when(hour(col("timestamp")).between(14, 21), "Evening")
+        .otherwise("Night")
+        .alias("time_bucket"),
+
+
+
+            )
 
 
 silver_df = silver_df.withColumn(
@@ -172,16 +230,19 @@ gold_df = silver_df \
     ) \
     .agg(
         avg("temperature").alias("avg_temp"),
+        max("temperature").alias("max_temp"),
         avg("rpm").alias("avg_rpm"),
         avg("vibration").alias("avg_vibration"),
+        max("vibration").alias("max_vibration"),
         avg("power_kw").alias("avg_power"),
+        max("power_kw").alias("peak_power"),
         avg("health_score").alias("avg_health_score"),
         min("health_score").alias("min_health_score"),
+        avg("risk_score").alias("avg_risk_score"),
+        (sum("running_flag")/count("*")* 100).alias("uptime_percentage"),
         sum("fault_flag").alias("fault_count"),
         count("*").alias("total_events"),
-        (
-            sum("fault_flag") * 100.0 / count("*")
-        ).alias("fault_percentage")
+        (sum("fault_flag") * 100.0 / count("*")).alias("fault_percentage")
     )
 
 gold_df = gold_df.select(
@@ -196,8 +257,15 @@ gold_df = gold_df.select(
     col("min_health_score"),
     col("fault_count"),
     col("fault_percentage"),
-    col("total_events")
+    col("total_events"),
+    col("max_temp"),
+    col("max_vibration"),
+    col("peak_power"),
+    col("avg_risk_score"),
+    col("uptime_percentage")    
 )
+
+
 
 
 silver_kafka_df = silver_df.select(
@@ -219,6 +287,7 @@ silver_kafka_query = silver_kafka_df.writeStream \
 #     .outputMode("append") \
 #     .trigger(processingTime="2 seconds") \
 #     .start()
+
 
 def write_bronze_to_minio(batch_df, batch_id):
 
@@ -266,7 +335,13 @@ def write_gold_to_minio(batch_df, batch_id):
         col("min_health_score"),
         col("fault_count"),
         col("fault_percentage"),
-        col("total_events")
+        col("total_events"),
+        col("max_temp"),
+        col("max_vibration"),
+        col("peak_power"),
+        col("avg_risk_score"),
+        col("uptime_percentage"),
+                                      
     ).write \
      .mode("append") \
      .parquet(
@@ -286,6 +361,105 @@ gold_minio_query = gold_df.writeStream \
         "/home/jovyan/data/checkpoints/machine_gold_minio"
     ) \
     .start()
+
+
+
+
+def write_quarantine_to_postgres(
+    batch_df,
+    batch_id
+):
+    try:
+
+        missing = []
+
+        for c in [
+            "event_id",
+            "timestamp",
+            "machine_id",
+            "machine_type",
+            "floor",
+            "shift",
+            "status",
+            "error_code",
+            "is_fault",
+            "temperature",
+            "vibration",
+            "rpm",
+            "power_kw",
+            "cnc_oil",
+            "coolant_pressure",
+            "joint_torque",
+            "force",
+            "belt_tension",
+            "load_weight",
+            "flow_rate",
+            "inlet_pressure",
+            "validation_reason"
+        ]:
+            if c not in batch_df.columns:
+                missing.append(c)
+
+        print("MISSING COLUMNS:", missing)    
+        print("===== QUARANTINE BATCH =====")
+        print(batch_df.columns)
+        # invalid_count = batch_df.count()
+
+        batch_df.select(
+            "event_id",
+            "timestamp",
+            "machine_id",
+            "machine_type",
+            "floor",
+            "shift",
+            "status",
+            "error_code",
+            "is_fault",
+            "temperature",
+            "vibration",
+            "rpm",
+            "power_kw",
+            "cnc_oil",
+            "coolant_pressure",
+            "joint_torque",
+            "force",
+            "belt_tension",
+            "load_weight",
+            "flow_rate",
+            "inlet_pressure",
+            "validation_reason"
+            ).write \
+            .format("jdbc") \
+            .option("url", "jdbc:postgresql://postgres:5432/db") \
+            .option("dbtable", "machine_events_quarantine") \
+            .option("user", "user") \
+            .option("password", "password") \
+            .option("driver", "org.postgresql.Driver") \
+            .mode("append") \
+            .save()
+
+        # print(
+        #     f"[QUALITY] Batch {batch_id}"
+        #     f" Invalid Records = {invalid_count}"
+        # )
+    except Exception as e:
+        print("QUARANTINE ERROR:")
+        print(str(e))
+        raise        
+
+invalid_query = (
+    invalid_df.writeStream
+    .foreachBatch(write_quarantine_to_postgres)
+    .option(
+        "checkpointLocation",
+        "/home/jovyan/data/checkpoints/quarantine"
+    )
+    .start()
+)    
+
+
+
+
 
 def write_bronze_to_postgres(batch_df, batch_id):
 
@@ -354,6 +528,8 @@ def write_silver_to_postgres(batch_df, batch_id):
         "vibration",
         "rpm",
         "power_kw",
+        "power_status",
+        
 
         "cnc_oil",
         "coolant_pressure",
@@ -370,14 +546,21 @@ def write_silver_to_postgres(batch_df, batch_id):
         "temperature_status",
         "vibration_status",
 
+        "running_flag",
+        
         "fault_flag",
-
+        "fault_category",
         "event_date",
         "event_hour",
+        "time_bucket",
+        
 
         "health_score",
+        
+        "risk_score",
 
         "anomaly_flag"
+
         
     ).write \
         .format("jdbc") \
@@ -423,7 +606,12 @@ def write_gold_to_postgres(batch_df, batch_id):
         col("min_health_score"),
         col("fault_count"),
         col("fault_percentage"),
-        col("total_events")
+        col("total_events"),
+        col("max_temp"),
+        col("max_vibration"),
+        col("peak_power"),
+        col("avg_risk_score"),
+        col("uptime_percentage"),        
 
     )
 
@@ -488,7 +676,12 @@ def write_gold_to_es(batch_df, batch_id):
             col("min_health_score"),
             col("fault_count"),
             col("fault_percentage"),
-            col("total_events")
+            col("total_events"),
+            col("max_temp"),
+            col("max_vibration"),
+            col("peak_power"),
+            col("avg_risk_score"),
+            col("uptime_percentage")          
         ).write \
         .format("org.elasticsearch.spark.sql") \
         .option("es.nodes", "elasticsearch") \
