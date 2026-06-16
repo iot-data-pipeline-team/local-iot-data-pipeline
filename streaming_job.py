@@ -838,6 +838,7 @@ worker_gold_df = (
     )
 
     .groupBy(
+        col("worker_id"),
         window(
             col("timestamp"),
             "5 minutes"
@@ -849,7 +850,7 @@ worker_gold_df = (
         sum(
             "safety_violation_flag"
         ).alias(
-            "violations_per_hour"
+            "violations_per_window"
         ),
 
         sum(
@@ -873,13 +874,14 @@ worker_gold_df = (
     worker_gold_df
 
     .select(
+        col("worker_id"),
         col("window.start")
         .alias("window_start"),
 
         col("window.end")
         .alias("window_end"),
 
-        col("violations_per_hour"),
+        col("violations_per_window"),
 
         col("workers_in_danger_zone"),
 
@@ -1110,9 +1112,10 @@ def write_worker_gold_to_es(
     try:
 
         batch_df.select(
+            "worker_id",
             "window_start",
             "window_end",
-            "violations_per_hour",
+            "violations_per_window",
             "workers_in_danger_zone",
             "avg_fatigue_score"
         ).write \

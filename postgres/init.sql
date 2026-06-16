@@ -35,12 +35,13 @@ CREATE TABLE worker_events_silver (
 );
 
 CREATE TABLE worker_safety_gold (
+    worker_id VARCHAR(50),
 
     window_start TIMESTAMPTZ,
 
     window_end TIMESTAMPTZ,
 
-    violations_per_hour BIGINT,
+    violations_per_window BIGINT,
 
     workers_in_danger_zone BIGINT,
 

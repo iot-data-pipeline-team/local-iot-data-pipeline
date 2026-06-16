@@ -257,6 +257,14 @@ services:
 
         curl -f -X PUT http://elasticsearch:9200/machine-aggregates
 
+        curl -f -X PUT http://elasticsearch:9200/_index_template/worker_template -H 'Content-Type: application/json' -d @/templates/worker_template.json
+
+        curl -f -X PUT http://elasticsearch:9200/_index_template/worker_safety_template -H 'Content-Type: application/json' -d @/templates/worker_safety_template.json        
+
+        curl -f -X PUT http://elasticsearch:9200/worker-events
+
+        curl -f -X PUT http://elasticsearch:9200/worker-safety
+
         echo 'Template applied successfully.'
       "
     volumes:

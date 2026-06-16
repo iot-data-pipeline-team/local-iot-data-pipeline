@@ -1,0 +1,37 @@
+{
+  "index_patterns": ["worker-safety*"],
+  "template": {
+    "settings": {
+      "number_of_shards": 1,
+      "number_of_replicas": 0
+    },
+    "mappings": {
+      "properties": {
+
+        "worker_id": {
+          "type": "keyword"
+        },        
+
+        "window_start": {
+          "type": "date"
+        },
+
+        "window_end": {
+          "type": "date"
+        },
+
+        "violations_per_window": {
+          "type": "long"
+        },
+
+        "workers_in_danger_zone": {
+          "type": "long"
+        },
+
+        "avg_fatigue_score": {
+          "type": "float"
+        }
+      }
+    }
+  }
+}

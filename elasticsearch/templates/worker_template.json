@@ -1,0 +1,49 @@
+{
+  "index_patterns": ["worker-events*"],
+  "template": {
+    "settings": {
+      "number_of_shards": 1,
+      "number_of_replicas": 0
+    },
+    "mappings": {
+      "properties": {
+
+        "worker_id": {
+          "type": "keyword"
+        },
+
+        "timestamp": {
+          "type": "date"
+        },
+
+        "floor": {
+          "type": "keyword"
+        },
+
+        "helmet_on": {
+          "type": "boolean"
+        },
+
+        "danger_zone": {
+          "type": "boolean"
+        },
+
+        "fatigue_score": {
+          "type": "integer"
+        },
+
+        "safety_violation_flag": {
+          "type": "integer"
+        },
+
+        "fatigue_status": {
+          "type": "keyword"
+        },
+
+        "worker_risk_level": {
+          "type": "keyword"
+        }
+      }
+    }
+  }
+}
