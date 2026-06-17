@@ -1,8 +1,8 @@
-# 🚀 Real-Time Industrial IoT Streaming Platform
+# 🚀 Real-Time Industrial IoT Analytics Platform
 
-A real-time industrial IoT data engineering platform built using Docker, Kafka, Spark Structured Streaming, Elasticsearch, PostgreSQL, MinIO, and Kibana.
+A complete real-time Industrial IoT Analytics Platform built using Apache Kafka, Spark Structured Streaming, PostgreSQL, Elasticsearch, MinIO, Kibana, and Power BI-ready data models.
 
-The project simulates industrial IoT devices generating telemetry data and processes it through a modern streaming architecture with automated orchestration and dashboard provisioning.
+The platform simulates both industrial machines and worker safety events, processes them through Bronze/Silver/Gold data layers, performs real-time data quality validation, stores clean and quarantined records, and delivers analytics-ready datasets for operational monitoring and business intelligence.
 
 ---
 
@@ -15,88 +15,313 @@ The project simulates industrial IoT devices generating telemetry data and proce
 # 📸 Screenshots
 
 ## Kibana Dashboard
-<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/d1e7ecbf-653e-4242-a6e2-8b276f6e5eca" />
 
+<img width="1920" height="1080" alt="Screenshot (1883)" src="https://github.com/user-attachments/assets/075fb464-fd22-49c1-a029-0819ea0ec344" />
 
-## Spark Streaming
-<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/42bd90cf-dd6e-49f9-a53c-c5d1d028f4c0" />
+## Kafka
 
+<img width="1920" height="1080" alt="Screenshot (1882)" src="https://github.com/user-attachments/assets/62424989-1ef5-4ed8-b7f0-1f17b0083f6c" />
+<img width="1920" height="1080" alt="Screenshot (1881)" src="https://github.com/user-attachments/assets/6127fe44-6b71-460b-8ada-12f932a92d0a" />
 
-## MinIO Storage
-<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/88b842e8-c537-4a28-a2bf-7f1fb005bd32" />
+## Spark Structured Streaming
 
+<img width="1920" height="1080" alt="Screenshot (1880)" src="https://github.com/user-attachments/assets/51177dd9-ffe5-4fce-a54e-9ef0f9761b1c" />
+
+## MinIO Data Lake
+
+<img width="1920" height="1080" alt="Screenshot (1878)" src="https://github.com/user-attachments/assets/ef0a869f-d6b8-426d-b99c-34aa653e00ee" />
+
+## PostgreSQL Tables
+
+<img width="1920" height="1080" alt="Screenshot (1885)" src="https://github.com/user-attachments/assets/1a07e916-5567-4114-92c2-dcec114941bd" />
+
+## Power BI Dashboard
+
+(Add Screenshot)
 
 ---
 
-# 🧠 Architecture
+# 🏗️ Architecture
 
 ```text
-Python IoT Producer
-        ↓
-Kafka + ZooKeeper
-        ↓
-Spark Structured Streaming
-   ↙         ↓          ↘
-PostgreSQL  Elasticsearch  MinIO (Parquet)
-                  ↓
-               Kibana
+Machine Producer                 Worker Producer
+       │                                 │
+       └──────────────┬──────────────────┘
+                      │
+                   Kafka
+                      │
+            Spark Structured Streaming
+                      │
+      ┌───────────────┼────────────────┐
+      │               │                │
+      ▼               ▼                ▼
+
+ PostgreSQL      Elasticsearch      MinIO
+ Bronze/Silver   Real-Time Search   Data Lake
+ Gold Layers     & Analytics        Parquet Files
+
+      │               │
+      ▼               ▼
+
+  Power BI        Kibana
 ```
 
 ---
 
-# ⚙️ Tech Stack
+# ⚙️ Technology Stack
 
-## Streaming & Processing
-- Apache Kafka
-- Apache Spark Structured Streaming
-- Python
+## Streaming
 
-## Storage & Analytics
-- PostgreSQL
-- Elasticsearch
-- MinIO (S3-compatible object storage)
+* Apache Kafka
+* Apache Spark Structured Streaming
+* Python
+
+## Storage
+
+* PostgreSQL
+* Elasticsearch
+* MinIO (S3-Compatible Data Lake)
 
 ## Visualization
-- Kibana
-- Kafka UI
+
+* Kibana
+* Kafka UI
+* Power BI
 
 ## Infrastructure
-- Docker
-- Docker Compose
+
+* Docker
+* Docker Compose
+
+---
+
+# 📊 Data Pipelines
+
+## Machine Monitoring Pipeline
+
+### Bronze Layer
+
+Raw machine telemetry:
+
+* Temperature
+* RPM
+* Vibration
+* Power Consumption
+* Machine Status
+* Fault Information
+
+### Silver Layer
+
+Business transformations:
+
+* Health Score
+* Risk Score
+* Temperature Status
+* Vibration Status
+* Fault Categories
+* Power Status
+* Time Buckets
+* Anomaly Detection
+
+### Gold Layer
+
+Windowed aggregations:
+
+* Average Temperature
+* Peak Temperature
+* Average RPM
+* Average Vibration
+* Fault Percentage
+* Uptime Percentage
+* Health Metrics
+
+---
+
+## Worker Safety Pipeline
+
+### Bronze Layer
+
+Raw worker events:
+
+* Worker ID
+* Floor
+* Zone
+* Heart Rate
+* Helmet Detection
+* Safety Vest Detection
+* Fatigue Score
+* Movement Status
+
+### Silver Layer
+
+Safety analytics:
+
+* Safety Violation Flag
+* Fatigue Status
+* Worker Risk Level
+* Heart Rate Status
+* Alert Level
+
+### Gold Layer
+
+5-minute window aggregations:
+
+* Violations Per Window
+* Danger Zone Counts
+* Average Fatigue Score
+
+---
+
+# 🛡️ Data Quality & Quarantine Layer
+
+The platform performs real-time validation and routes invalid records into dedicated quarantine tables.
+
+## Machine Validation Rules
+
+* Missing Timestamp
+* Missing Temperature
+* Invalid Temperature Range
+* Negative RPM
+* Negative Power
+* Empty Machine ID
+* Invalid Status
+
+## Worker Validation Rules
+
+* Missing Timestamp
+* Empty Worker ID
+* Invalid Heart Rate
+* Invalid Movement Status
+
+## Quarantine Tables
+
+* machine_events_quarantine
+* worker_events_quarantine
+
+Each record includes:
+
+* Original data
+* Validation reason
+* Timestamp
+
+---
+
+# 🗄️ Storage Layers
+
+## PostgreSQL
+
+Stores:
+
+* Machine Bronze
+* Machine Silver
+* Machine Gold
+* Worker Bronze
+* Worker Silver
+* Worker Gold
+* Machine Quarantine
+* Worker Quarantine
+
+---
+
+## Elasticsearch
+
+Indexes:
+
+### machine-events
+
+Real-time machine analytics.
+
+### machine-aggregates
+
+Machine KPI aggregations.
+
+### worker-events
+
+Real-time worker safety analytics.
+
+### worker-safety
+
+Worker safety KPI aggregations.
+
+---
+
+## MinIO Data Lake
+
+Stores Parquet files for:
+
+```text
+bronze/
+silver/
+gold/
+```
+
+for both Machine and Worker pipelines.
+
+---
+
+# 📈 Analytics Features
+
+## Machine Analytics
+
+* Health Monitoring
+* Fault Detection
+* Predictive Indicators
+* Uptime Analysis
+* Risk Scoring
+
+## Worker Analytics
+
+* PPE Compliance Monitoring
+* Fatigue Tracking
+* Danger Zone Monitoring
+* Worker Risk Assessment
+* Safety Alerts
+
+---
+
+# 📊 Power BI Integration
+
+The platform provides PostgreSQL views specifically designed for BI tools.
+
+### Machine Views
+
+* machine_events_bronze_view
+* machine_events_silver_view
+* machine_aggregates_gold_view
+* machine_events_quarantine_view
+
+### Worker Views
+
+* worker_events_bronze_view
+* worker_events_silver_view
+* worker_safety_gold_view
+* worker_events_quarantine_view
+
+All views include Cairo timezone conversion columns for reporting.
 
 ---
 
 # ✨ Key Features
 
-- Real-time IoT streaming pipeline
-- Automated Kafka topic creation
-- Elasticsearch template-first ingestion
-- Automated Kibana dashboard import
-- Real-time anomaly detection
-- Data lake storage using Parquet
-- Window-based aggregations
-- Automated MinIO bucket provisioning
-- Dockerized distributed architecture
-- Healthchecks and readiness orchestration
-
----
-
-# 🧠 Engineering Concepts Demonstrated
-
-- Distributed systems orchestration
-- Readiness vs healthchecks
-- Real-time stream processing
-- Schema evolution & mapping management
-- Data lake architecture
-- Search and analytics pipelines
-- Infrastructure automation
-- Fault-tolerant initialization
+* Real-Time Streaming Architecture
+* Bronze/Silver/Gold Data Lake Design
+* Worker Safety Monitoring
+* Industrial Machine Monitoring
+* Real-Time Data Validation
+* Quarantine Layer
+* Elasticsearch Analytics
+* Kibana Dashboards
+* Power BI Reporting
+* Kafka UI Monitoring
+* Automated Infrastructure Startup
+* Dockerized Deployment
+* Window-Based Aggregations
 
 ---
 
 # 📦 Quick Start
 
-## 1️⃣ Clone Repository
+## Clone Repository
 
 ```bash
 git clone -b baseline-pipeline-malek https://github.com/iot-data-pipeline-team/local-iot-data-pipeline.git
@@ -106,7 +331,7 @@ cd local-iot-data-pipeline
 
 ---
 
-## 2️⃣ Create Virtual Environment
+## Create Virtual Environment
 
 ```bash
 python -m venv venv
@@ -116,96 +341,62 @@ venv\Scripts\activate
 
 ---
 
-## 3️⃣ Install Dependencies
+## Install Dependencies
 
 ```bash
-python -m pip install -r requirements.txt
+pip install -r requirements.txt
 ```
 
 ---
 
-## 4️⃣ Run Entire Platform
+## Run Entire Platform
 
-```
- .\scripts\run_project.bat 
+```bash
+.\scripts\run_project.bat
 ```
 
 This automatically:
 
-- Starts infrastructure services
-- Creates Kafka topic
-- Applies Elasticsearch index template
-- Imports Kibana dashboards
-- Creates MinIO bucket
-- Starts Spark cluster
-- Runs Spark streaming job
-- Starts IoT producer
+* Starts Docker Services
+* Creates Kafka Topics
+* Applies Elasticsearch Templates
+* Creates MinIO Buckets
+* Imports Kibana Dashboards
+* Starts Spark Cluster
+* Launches Streaming Jobs
+* Starts Machine Producer
+* Starts Worker Producer
 
 ---
+
 # 🌐 Service URLs
 
-| Service | URL |
-|---|---|
-| Kibana | http://localhost:5601 |
-| MinIO Console | http://localhost:9001 |
-| Elasticsearch | http://localhost:9200 |
+| Service       | URL                    |
+| ------------- | ---------------------- |
+| Kibana        | http://localhost:5601  |
+| Kafka UI      | http://localhost:12000 |
+| MinIO Console | http://localhost:9001  |
+| Elasticsearch | http://localhost:9200  |
+| Jupyter       | http://localhost:8888  |
 
 ---
 
-## 🔐 MinIO Login Credentials
+# 🔐 Default Credentials
 
-Use the following credentials to access the MinIO console:
+## MinIO
 
 ```text
 Username: admin
 Password: password123
 ```
 
----
-
-## 📊 Kibana Dashboard
-
-After startup:
-
-1. Open Kibana:
-   http://localhost:5601
-
-2. Navigate to:
-   Dashboards → My Dashboards
-
-3. Open the imported IoT dashboard.
-
-4. To enable real-time updates:
-   - Click the time filter in the top-right corner
-   - Enable auto-refresh
-   - Set refresh interval to 1 second
-
-The dashboard will now update in near real-time as new IoT events arrive.
-
-# 🗂️ Data Outputs
-
 ## PostgreSQL
-- Raw IoT events
-- Aggregated metrics
 
-## Elasticsearch
-- Searchable real-time analytics
-- Kibana visualizations
-
-## MinIO
-- Parquet files
-- Data lake storage
-
----
-
-# ⚠️ Common Issues
-
-| Issue | Solution |
-|---|---|
-| Kafka startup failure | `docker compose down -v` |
-| Kibana import retrying | Wait for Kibana initialization |
-| Spark checkpoint conflicts | Delete checkpoints |
-| Elasticsearch unhealthy | Wait for JVM startup |
+```text
+Database: db
+Username: user
+Password: password
+```
 
 ---
 
@@ -217,8 +408,6 @@ The dashboard will now update in near real-time as new IoT events arrive.
 docker compose down
 ```
 
----
-
 ## Full Reset
 
 ```bash
@@ -227,18 +416,21 @@ docker compose down -v
 
 ---
 
-# 🚀 Future Improvements
+# 🚀 Future Enhancements
 
-- Kubernetes deployment
-- Airflow orchestration
-- Grafana monitoring
-- CI/CD pipeline
-- Cloud deployment (AWS/Azure)
+* Apache Airflow Orchestration
+* dbt Transformations
+* Great Expectations Data Quality
+* Kubernetes Deployment
+* CI/CD Pipelines
+* Cloud Deployment (AWS/GCP/Azure)
+* Grafana Monitoring
+* ML-Based Predictive Maintenance
 
 ---
 
 # 👨‍💻 Author
 
-Abdelrahman Malek
+Mostafa Abdelazeem, Ahmed Mahmoud, Dina Mostafa, Abdelrahman Malek, Mostafa Fahmi
 
-ITI Data Management Graduation Project
+Industrial IoT Streaming & Analytics Platform
