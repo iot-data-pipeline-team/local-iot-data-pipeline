@@ -1,4 +1,4 @@
-CREATE TABLE worker_events_bronze (
+CREATE TABLE worker_events_quarantine (
 
     worker_id VARCHAR(50),
 
@@ -6,14 +6,46 @@ CREATE TABLE worker_events_bronze (
 
     floor VARCHAR(10),
 
+    zone_id VARCHAR(50),
+
     helmet_on BOOLEAN,
+
+    safety_vest_on BOOLEAN,
+
+    heart_rate INTEGER,
+
+    movement_status VARCHAR(20),
+
+    danger_zone BOOLEAN,
+
+    fatigue_score DOUBLE PRECISION,
+
+    validation_reason VARCHAR(255)
+);
+
+CREATE TABLE IF NOT EXISTS worker_events_bronze (
+
+    worker_id VARCHAR(50),
+
+    timestamp TIMESTAMPTZ,
+
+    floor VARCHAR(10),
+
+    zone_id VARCHAR(50),
+
+    helmet_on BOOLEAN,
+
+    safety_vest_on BOOLEAN,
+
+    heart_rate INTEGER,
+
+    movement_status VARCHAR(20),
 
     danger_zone BOOLEAN,
 
     fatigue_score DOUBLE PRECISION
 );
-
-CREATE TABLE worker_events_silver (
+CREATE TABLE IF NOT EXISTS worker_events_silver (
 
     worker_id VARCHAR(50),
 
@@ -21,7 +53,17 @@ CREATE TABLE worker_events_silver (
 
     floor VARCHAR(10),
 
+    zone_id VARCHAR(50),
+
     helmet_on BOOLEAN,
+
+    safety_vest_on BOOLEAN,
+
+    heart_rate INTEGER,
+
+    heart_rate_status VARCHAR(20),
+
+    movement_status VARCHAR(20),
 
     danger_zone BOOLEAN,
 
@@ -31,10 +73,12 @@ CREATE TABLE worker_events_silver (
 
     fatigue_status VARCHAR(20),
 
-    worker_risk_level VARCHAR(20)
+    worker_risk_level VARCHAR(20),
+
+    alert_level VARCHAR(20)
 );
 
-CREATE TABLE worker_safety_gold (
+CREATE TABLE IF NOT EXISTS worker_safety_gold (
     worker_id VARCHAR(50),
 
     window_start TIMESTAMPTZ,
@@ -124,7 +168,7 @@ CREATE TABLE IF NOT EXISTS machine_events_bronze (
 
 CREATE TABLE IF NOT EXISTS machine_events_silver (
 
-    event_id VARCHAR(100) PRIMARY KEY,
+    event_id VARCHAR(100),
     timestamp TIMESTAMPTZ,
 
     machine_id VARCHAR(50),
@@ -210,74 +254,161 @@ CREATE TABLE IF NOT EXISTS machine_aggregates_gold (
 
 
 
-CREATE OR REPLACE VIEW machine_events_bronze_view AS
-SELECT *
-FROM machine_events_bronze;
-
-
-CREATE OR REPLACE VIEW machine_events_silver_view AS
+CREATE OR REPLACE VIEW worker_events_quarantine_view AS
 SELECT
-    event_id,
+
+    worker_id,
+
     timestamp,
-    timestamp AT TIME ZONE 'Africa/Cairo' AS cairo_time,
+
+    timestamp AT TIME ZONE 'Africa/Cairo'
+        AS cairo_time,
+
+    floor,
+
+    zone_id,
+
+    helmet_on,
+
+    safety_vest_on,
+
+    heart_rate,
+
+    movement_status,
+
+    danger_zone,
+
+    fatigue_score,
+
+    validation_reason
+
+FROM worker_events_quarantine;
+
+CREATE OR REPLACE VIEW machine_events_quarantine_view AS
+SELECT
+
+    event_id,
+
+    timestamp,
+
+    timestamp AT TIME ZONE 'Africa/Cairo'
+        AS cairo_time,
 
     machine_id,
+
     machine_type,
 
     floor,
+
     shift,
 
     status,
+
     error_code,
 
     is_fault,
 
     temperature,
+
     vibration,
+
     rpm,
+
     power_kw,
 
     cnc_oil,
+
     coolant_pressure,
 
     joint_torque,
+
     force,
 
     belt_tension,
+
     load_weight,
 
     flow_rate,
+
     inlet_pressure,
 
-    temperature_status,
-    vibration_status,
+    validation_reason
 
-    fault_flag,
+FROM machine_events_quarantine;
 
-    event_date,
-    event_hour,
-
-    health_score,
-    risk_score,
-
-    running_flag,
-
-    fault_category,
-
-    power_status,
-
-    time_bucket,
-
-    anomaly_flag
-
-FROM machine_events_silver;
-
-
-CREATE OR REPLACE VIEW machine_aggregates_gold_view AS
+CREATE OR REPLACE VIEW worker_events_bronze_view AS
 SELECT
-    machine_id,
+    worker_id,
+
+    timestamp,
+
+    timestamp AT TIME ZONE 'Africa/Cairo'
+        AS cairo_time,
+
+    floor,
+
+    zone_id,
+
+    helmet_on,
+
+    safety_vest_on,
+
+    heart_rate,
+
+    movement_status,
+
+    danger_zone,
+
+    fatigue_score
+
+FROM worker_events_bronze;
+
+
+CREATE OR REPLACE VIEW worker_events_silver_view AS
+SELECT
+
+    worker_id,
+
+    timestamp,
+
+    timestamp AT TIME ZONE 'Africa/Cairo'
+        AS cairo_time,
+
+    floor,
+
+    zone_id,
+
+    helmet_on,
+
+    safety_vest_on,
+
+    heart_rate,
+
+    heart_rate_status,
+
+    movement_status,
+
+    danger_zone,
+
+    fatigue_score,
+
+    safety_violation_flag,
+
+    fatigue_status,
+
+    worker_risk_level,
+
+    alert_level
+
+FROM worker_events_silver;
+
+CREATE OR REPLACE VIEW worker_safety_gold_view AS
+SELECT
+
+    worker_id,
 
     window_start,
+
     window_end,
 
     window_start AT TIME ZONE 'Africa/Cairo'
@@ -286,28 +417,11 @@ SELECT
     window_end AT TIME ZONE 'Africa/Cairo'
         AS cairo_window_end,
 
-    avg_temp,
-    max_temp,
+    violations_per_window,
 
-    avg_rpm,
+    workers_in_danger_zone,
 
-    avg_vibration,
-    max_vibration,
+    avg_fatigue_score
 
-    avg_power,
-    peak_power,
-
-    avg_health_score,
-    min_health_score,
-
-    avg_risk_score,
-
-    uptime_percentage,
-
-    fault_count,
-    fault_percentage,
-
-    total_events
-
-FROM machine_aggregates_gold;
+FROM worker_safety_gold;
 

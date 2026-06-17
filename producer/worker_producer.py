@@ -11,15 +11,37 @@ from kafka import KafkaProducer
 
 
 WORKERS = [
-    {"worker_id": "W001", "floor": "A"},
-    {"worker_id": "W002", "floor": "B"},
-    {"worker_id": "W003", "floor": "C"},
-    {"worker_id": "W004", "floor": "A"}
+    {
+        "worker_id": "W001",
+        "floor": "A",
+        "zone_id": "ZONE_1"
+    },
+    {
+        "worker_id": "W002",
+        "floor": "B",
+        "zone_id": "ZONE_2"
+    },
+    {
+        "worker_id": "W003",
+        "floor": "C",
+        "zone_id": "ZONE_3"
+    },
+    {
+        "worker_id": "W004",
+        "floor": "A",
+        "zone_id": "ZONE_1"
+    }
 ]
+
 
 def generate_worker_event(worker):
 
     fatigue = random.randint(10, 100)
+
+    heart_rate = random.randint(60, 130)
+
+    if random.random() < 0.01:
+        heart_rate = -20
 
     if fatigue > 80:
         danger_zone = random.random() < 0.30
@@ -28,19 +50,50 @@ def generate_worker_event(worker):
 
     helmet_on = random.random() > 0.05
 
-    return {
-        "worker_id": worker["worker_id"],
-        "timestamp": datetime.now(
+    safety_vest_on = random.random() > 0.08
+
+    movement_status = random.choice([
+        "ACTIVE",
+        "IDLE",
+        "WALKING"
+    ])
+
+    if random.random() < 0.01:
+        movement_status = "FLYING"
+
+    if random.random() < 0.01:
+        timestamp = None
+    else:
+        timestamp = datetime.now(
             timezone.utc
-        ).isoformat(),
+        ).isoformat()   
+
+    worker_id = worker["worker_id"]
+
+    if random.random() < 0.01:
+        worker_id = ""         
+
+    return {
+        "worker_id": worker_id,
+
+        "timestamp": timestamp,
 
         "floor": worker["floor"],
 
+        "zone_id": worker["zone_id"],
+
         "helmet_on": helmet_on,
+
+        "safety_vest_on": safety_vest_on,
+
+        "heart_rate": heart_rate,
+
+        "movement_status": movement_status,
+
         "danger_zone": danger_zone,
+
         "fatigue_score": fatigue
     }
-
 
 producer = KafkaProducer(
     bootstrap_servers=[
@@ -66,7 +119,7 @@ while True:
 
     producer.send(
         "worker-events",
-        key=event["worker_id"],
+        key=event["worker_id"] or "UNKNOWN",
         value=event
     )
 

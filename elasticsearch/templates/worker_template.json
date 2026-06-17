@@ -8,29 +8,27 @@
     "mappings": {
       "properties": {
 
-        "worker_id": {
-          "type": "keyword"
-        },
+        "worker_id": { "type": "keyword" },
 
-        "timestamp": {
-          "type": "date"
-        },
+        "timestamp": { "type": "date" },
 
-        "floor": {
-          "type": "keyword"
-        },
+        "floor": { "type": "keyword" },
 
-        "helmet_on": {
-          "type": "boolean"
-        },
+        "zone_id": { "type": "keyword" },
 
-        "danger_zone": {
-          "type": "boolean"
-        },
+        "helmet_on": { "type": "boolean" },
 
-        "fatigue_score": {
-          "type": "integer"
-        },
+        "safety_vest_on": { "type": "boolean" },
+
+        "heart_rate": { "type": "integer" },
+
+        "heart_rate_status": { "type": "keyword" },
+
+        "movement_status": { "type": "keyword" },
+
+        "danger_zone": { "type": "boolean" },
+
+        "fatigue_score": { "type": "integer" },
 
         "safety_violation_flag": {
           "type": "integer"
@@ -41,6 +39,10 @@
         },
 
         "worker_risk_level": {
+          "type": "keyword"
+        },
+
+        "alert_level": {
           "type": "keyword"
         }
       }

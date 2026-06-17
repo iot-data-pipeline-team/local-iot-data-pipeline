@@ -172,6 +172,10 @@ def inject_dirty_data(event):
 
 def generate_reading(m):
     now   = datetime.now(timezone.utc)
+    if random.random() < 0.01:
+        timestamp = None
+    else:
+        timestamp = now.isoformat()    
     hour  = now.hour
     shift = get_shift(hour)
     load  = shift_load(shift)
@@ -208,9 +212,15 @@ def generate_reading(m):
             rpm  = 0.0
             temp -= 4.0
      # base event — fields every machine has
+
+    if random.random() < 0.01:
+        power = -5
+
+    if random.random() < 0.01:
+        status = "BROKEN_STATUS"     
     event = {
         "event_id":     f"{m['machine_id']}_{int(now.timestamp() * 1000)}",
-        "timestamp":    now.isoformat(),
+        "timestamp":    timestamp,
         "machine_id":   m["machine_id"],
         "machine_type": m["machine_type"],
         "floor":        m["floor"],
@@ -226,6 +236,8 @@ def generate_reading(m):
         },
     }
     
+
+
     # machine-specific sensors — only the relevant block, no nulls
     mtype = m["machine_type"]
 

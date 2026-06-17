@@ -118,10 +118,16 @@ bronze_df = bronze_df.select(
     col("pump_sensors.inlet_pressure_bar").alias("inlet_pressure")
 )
 
+
 invalid_df = bronze_df.withColumn(
     "validation_reason",
 
     when(
+        col("timestamp").isNull(),
+        "NULL_TIMESTAMP"
+    )
+
+    .when(
         col("temperature").isNull(),
         "NULL_TEMPERATURE"
     )
@@ -137,24 +143,48 @@ invalid_df = bronze_df.withColumn(
     )
 
     .when(
+        col("power_kw") < 0,
+        "INVALID_POWER"
+    )
+
+    .when(
+        ~col("status").isin(
+            "running",
+            "idle",
+            "fault"
+        ),
+        "INVALID_STATUS"
+    )
+
+    .when(
         col("machine_id") == "",
         "EMPTY_MACHINE_ID"
     )
-
 ).filter(
     col("validation_reason").isNotNull()
 )
 
 
 valid_df = bronze_df.filter(
+    col("timestamp").isNotNull()
+).filter(
     col("temperature").isNotNull()
 ).filter(
     col("temperature").between(-20,150)
 ).filter(
     col("rpm") >= 0
 ).filter(
+    col("power_kw") >= 0
+).filter(
+    col("status").isin(
+        "running",
+        "idle",
+        "fault"
+    )
+).filter(
     col("machine_id") != ""
 )
+
 
 silver_df = valid_df  \
     .filter(col("machine_id").isNotNull()) \
@@ -715,8 +745,8 @@ gold_elastic_query = gold_df.writeStream \
 
 
 ##----------------------------- Workers Code -----------------
-
 worker_schema = StructType([
+
     StructField(
         "worker_id",
         StringType()
@@ -733,8 +763,28 @@ worker_schema = StructType([
     ),
 
     StructField(
+        "zone_id",
+        StringType()
+    ),
+
+    StructField(
         "helmet_on",
         BooleanType()
+    ),
+
+    StructField(
+        "safety_vest_on",
+        BooleanType()
+    ),
+
+    StructField(
+        "heart_rate",
+        IntegerType()
+    ),
+
+    StructField(
+        "movement_status",
+        StringType()
     ),
 
     StructField(
@@ -783,16 +833,65 @@ worker_bronze_df = (
     )
 )
 
+worker_invalid_df = (
+    worker_bronze_df
+    .withColumn(
+        "validation_reason",
 
+        when(
+            col("timestamp").isNull(),
+            "NULL_TIMESTAMP"
+        )
+
+        .when(
+            col("worker_id") == "",
+            "EMPTY_WORKER_ID"
+        )
+
+        .when(
+            col("heart_rate") < 0,
+            "INVALID_HEART_RATE"
+        )
+
+        .when(
+            ~col("movement_status").isin(
+                "ACTIVE",
+                "IDLE",
+                "WALKING"
+            ),
+            "INVALID_MOVEMENT_STATUS"
+        )
+    )
+    .filter(
+        col("validation_reason").isNotNull()
+    )
+)
+
+worker_valid_df = worker_bronze_df.filter(
+    col("timestamp").isNotNull()
+).filter(
+    col("worker_id") != ""
+).filter(
+    col("heart_rate") >= 0
+).filter(
+    col("movement_status").isin(
+        "ACTIVE",
+        "IDLE",
+        "WALKING"
+    )
+)
 
 worker_silver_df = (
-    worker_bronze_df
+
+    worker_valid_df
 
     .withColumn(
         "safety_violation_flag",
 
         when(
-            col("helmet_on") == False,
+            (~col("helmet_on"))
+            |
+            (~col("safety_vest_on")),
             1
         ).otherwise(0)
     )
@@ -815,17 +914,47 @@ worker_silver_df = (
         "worker_risk_level",
 
         when(
-            (col("danger_zone") == True)
+            (col("danger_zone"))
             &
             (col("fatigue_score") > 80),
             "Critical"
         )
         .when(
-            col("danger_zone") == True,
+            col("danger_zone"),
             "High"
         )
         .otherwise("Normal")
     )
+
+    .withColumn(
+        "alert_level",
+
+        when(
+            (col("danger_zone"))
+            &
+            (col("fatigue_score") > 80),
+            "CRITICAL"
+        )
+        .when(
+            col("safety_violation_flag") == 1,
+            "WARNING"
+        )
+        .otherwise("NORMAL")
+    )
+
+    .withColumn(
+        "heart_rate_status",
+
+        when(
+            col("heart_rate") > 120,
+            "High"
+        )
+        .when(
+            col("heart_rate") > 90,
+            "Elevated"
+        )
+        .otherwise("Normal")
+    )    
 )
 
 
@@ -889,6 +1018,55 @@ worker_gold_df = (
     )
 )
 
+def write_worker_quarantine_to_postgres(
+    batch_df,
+    batch_id
+):
+
+    batch_df.select(
+        "worker_id",
+        "timestamp",
+        "floor",
+        "zone_id",
+        "helmet_on",
+        "safety_vest_on",
+        "heart_rate",
+        "movement_status",
+        "danger_zone",
+        "fatigue_score",
+        "validation_reason"
+    ).write \
+        .format("jdbc") \
+        .option(
+            "url",
+            "jdbc:postgresql://postgres:5432/db"
+        ) \
+        .option(
+            "dbtable",
+            "worker_events_quarantine"
+        ) \
+        .option("user", "user") \
+        .option("password", "password") \
+        .option(
+            "driver",
+            "org.postgresql.Driver"
+        ) \
+        .mode("append") \
+        .save()
+    
+worker_invalid_query = (
+    worker_invalid_df
+    .writeStream
+    .foreachBatch(
+        write_worker_quarantine_to_postgres
+    )
+    .option(
+        "checkpointLocation",
+        "/home/jovyan/data/checkpoints/worker_quarantine"
+    )
+    .start()
+)    
+
 def write_worker_bronze_to_postgres(
     batch_df,
     batch_id
@@ -902,7 +1080,11 @@ def write_worker_bronze_to_postgres(
         "worker_id",
         "timestamp",
         "floor",
+        "zone_id",
         "helmet_on",
+        "safety_vest_on",
+        "heart_rate",
+        "movement_status",
         "danger_zone",
         "fatigue_score"
     ).write \
@@ -955,12 +1137,18 @@ def write_worker_silver_to_postgres(
         "worker_id",
         "timestamp",
         "floor",
+        "zone_id",
         "helmet_on",
+        "safety_vest_on",
+        "heart_rate",
+        "heart_rate_status",
+        "movement_status",
         "danger_zone",
         "fatigue_score",
         "safety_violation_flag",
         "fatigue_status",
-        "worker_risk_level"
+        "worker_risk_level",
+        "alert_level"
     ).write \
         .format("jdbc") \
         .option(
@@ -1042,6 +1230,91 @@ worker_gold_postgres_query = (
     .start()
 )
 
+
+def write_worker_bronze_to_minio(
+    batch_df,
+    batch_id
+):
+
+    batch_df.write \
+        .mode("append") \
+        .parquet(
+            "s3a://iot-data/bronze/worker_bronze_data/"
+        )
+worker_bronze_minio_query = (
+    worker_bronze_df
+    .writeStream
+    .foreachBatch(
+        write_worker_bronze_to_minio
+    )
+    .option(
+        "checkpointLocation",
+        "/home/jovyan/data/checkpoints/worker_bronze_minio"
+    )
+    .start()
+)
+
+
+
+def write_worker_silver_to_minio(
+    batch_df,
+    batch_id
+):
+
+    batch_df.write \
+        .mode("append") \
+        .parquet(
+            "s3a://iot-data/silver/worker_silver_data/"
+        )
+worker_silver_minio_query = (
+    worker_silver_df
+    .writeStream
+    .foreachBatch(
+        write_worker_silver_to_minio
+    )
+    .option(
+        "checkpointLocation",
+        "/home/jovyan/data/checkpoints/worker_silver_minio"
+    )
+    .start()
+)
+
+def write_worker_gold_to_minio(
+    batch_df,
+    batch_id
+):
+
+    batch_df.select(
+        "worker_id",
+        "window_start",
+        "window_end",
+        "violations_per_window",
+        "workers_in_danger_zone",
+        "avg_fatigue_score"
+    ).write \
+     .mode("append") \
+     .parquet(
+         "s3a://iot-data/gold/worker_gold_data/"
+     )
+    
+worker_gold_minio_query = (
+    worker_gold_df
+    .writeStream
+    .outputMode("update")
+    .foreachBatch(
+        write_worker_gold_to_minio
+    )
+    .option(
+        "checkpointLocation",
+        "/home/jovyan/data/checkpoints/worker_gold_minio"
+    )
+    .start()
+)    
+
+
+
+
+
 def write_worker_silver_to_es(
     batch_df,
     batch_id
@@ -1052,12 +1325,18 @@ def write_worker_silver_to_es(
             "worker_id",
             "timestamp",
             "floor",
+            "zone_id",
             "helmet_on",
+            "safety_vest_on",
+            "heart_rate",
+            "heart_rate_status",
+            "movement_status",
             "danger_zone",
             "fatigue_score",
             "safety_violation_flag",
             "fatigue_status",
-            "worker_risk_level"
+            "worker_risk_level",
+            "alert_level"
         ).write \
         .format(
             "org.elasticsearch.spark.sql"
