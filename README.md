@@ -65,6 +65,94 @@ Machine Producer                 Worker Producer
 
   Power BI        Kibana
 ```
+---
+
+# 📦 Project Scope
+
+The platform contains:
+
+- 2 Independent Streaming Pipelines (Machine Monitoring & Worker Safety)
+- 3-Broker Kafka Cluster
+- 2 Kafka Topics
+- Bronze / Silver / Gold Medallion Architecture
+- Data Quality & Quarantine Framework
+- 8 PostgreSQL Tables
+- 8 Power BI Ready Views
+- 4 Elasticsearch Indexes
+- MinIO Data Lake Storage
+- Kibana Operational Dashboards
+- Power BI Reporting Layer
+- Fully Dockerized Deployment
+
+---
+
+# 🧠 Engineering Decisions
+
+## Why a 3-Broker Kafka Cluster?
+
+The platform uses a distributed Kafka cluster consisting of three brokers instead of a single broker to simulate a production-grade streaming environment.
+
+Key configuration:
+
+* Replication Factor = 3
+* Min In-Sync Replicas = 2
+* Producer Acknowledgment = all
+
+This configuration improves fault tolerance and ensures message durability even if a broker becomes unavailable.
+
+---
+
+## Why Bronze / Silver / Gold Architecture?
+
+The platform follows the Medallion Architecture pattern:
+
+### Bronze Layer
+
+Stores raw events exactly as received from Kafka.
+
+### Silver Layer
+
+Applies business rules, data quality checks, enrichment, anomaly detection, and operational KPIs.
+
+### Gold Layer
+
+Provides aggregated datasets optimized for analytics, dashboards, and business reporting.
+
+This separation improves maintainability, scalability, and data governance.
+
+---
+
+## Why a Quarantine Layer?
+
+Invalid records are not discarded.
+
+Instead, they are routed into dedicated quarantine tables where validation failures can be investigated without impacting downstream analytics.
+
+Examples include:
+
+* Missing timestamps
+* Invalid sensor values
+* Negative measurements
+* Invalid statuses
+* Empty identifiers
+
+This approach preserves data lineage and supports operational troubleshooting.
+
+---
+
+## Why Multiple Storage Targets?
+
+The platform stores data in multiple specialized systems:
+
+| Storage       | Purpose                                     |
+| ------------- | ------------------------------------------- |
+| PostgreSQL    | BI-ready relational analytics               |
+| Elasticsearch | Real-time search and operational monitoring |
+| MinIO         | Long-term Data Lake storage                 |
+| Kafka         | Event streaming backbone                    |
+
+Each technology is used for the workload it handles best.
+
 
 ---
 
@@ -279,6 +367,8 @@ for both Machine and Worker pipelines.
 
 ---
 
+
+
 # 📊 Power BI Integration
 
 The platform provides PostgreSQL views specifically designed for BI tools.
@@ -300,6 +390,19 @@ The platform provides PostgreSQL views specifically designed for BI tools.
 All views include Cairo timezone conversion columns for reporting.
 
 ---
+
+
+# 🚀 Platform Capabilities
+
+- Real-time event ingestion
+- Fault detection within seconds
+- Automatic quarantine of invalid events
+- Multi-sink storage architecture
+- Near real-time dashboard refresh
+- Window-based KPI aggregation
+
+---
+
 
 # ✨ Key Features
 
@@ -413,6 +516,53 @@ docker compose down
 ```bash
 docker compose down -v
 ```
+
+# 📊 Simulated Data Volume
+
+## Machine Monitoring Pipeline
+
+* 4 industrial machine types
+* Continuous event generation
+* Real-time fault simulation
+* Real-time anomaly generation
+
+## Worker Safety Pipeline
+
+* 4 simulated workers
+* Continuous safety monitoring
+* PPE compliance tracking
+* Fatigue and risk monitoring
+
+## Platform Characteristics
+
+* Streaming ingestion through Apache Kafka
+* Real-time processing with Spark Structured Streaming
+* Multi-sink architecture (PostgreSQL, Elasticsearch, MinIO)
+* Window-based aggregations for KPI generation
+* Continuous analytics updates through Kibana and Power BI
+
+
+## Machine Validation Rules
+
+| Validation Rule          | Action     |
+| ------------------------ | ---------- |
+| NULL_TIMESTAMP           | Quarantine |
+| NULL_TEMPERATURE         | Quarantine |
+| TEMPERATURE_OUT_OF_RANGE | Quarantine |
+| INVALID_RPM              | Quarantine |
+| INVALID_POWER            | Quarantine |
+| EMPTY_MACHINE_ID         | Quarantine |
+| INVALID_STATUS           | Quarantine |
+
+## Worker Validation Rules
+
+| Validation Rule         | Action     |
+| ----------------------- | ---------- |
+| NULL_TIMESTAMP          | Quarantine |
+| EMPTY_WORKER_ID         | Quarantine |
+| INVALID_HEART_RATE      | Quarantine |
+| INVALID_MOVEMENT_STATUS | Quarantine |
+
 
 ---
 
