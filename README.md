@@ -18,6 +18,36 @@ worker_producer.py ────────────────────�
              (Kibana dashboards)         (Parquet archive)       (Power BI / SQL)
 ```
 
+
+# 📸 Screenshots
+
+## Kibana Dashboard
+
+<img width="1920" height="1080" alt="Screenshot (1883)" src="https://github.com/user-attachments/assets/075fb464-fd22-49c1-a029-0819ea0ec344" />
+
+## Kafka
+
+<img width="1920" height="1080" alt="Screenshot (1882)" src="https://github.com/user-attachments/assets/62424989-1ef5-4ed8-b7f0-1f17b0083f6c" />
+<img width="1920" height="1080" alt="Screenshot (1881)" src="https://github.com/user-attachments/assets/6127fe44-6b71-460b-8ada-12f932a92d0a" />
+
+## Spark Structured Streaming
+
+<img width="1920" height="1080" alt="Screenshot (1880)" src="https://github.com/user-attachments/assets/51177dd9-ffe5-4fce-a54e-9ef0f9761b1c" />
+
+## MinIO Data Lake
+
+<img width="1920" height="1080" alt="Screenshot (1878)" src="https://github.com/user-attachments/assets/ef0a869f-d6b8-426d-b99c-34aa653e00ee" />
+
+## PostgreSQL Tables
+
+<img width="1920" height="1080" alt="Screenshot (1885)" src="https://github.com/user-attachments/assets/1a07e916-5567-4114-92c2-dcec114941bd" />
+
+## Power BI Dashboard
+
+(Add Screenshot)
+
+---
+
 ---
 
 ## Table of Contents
@@ -61,6 +91,8 @@ The pipeline follows the **Medallion architecture** with three layers:
 Both the **machine** and **worker** event streams go through this same 4-layer process independently inside the same `streaming_job.py`.
 
 ---
+
+
 
 ## Prerequisites
 
