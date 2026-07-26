@@ -11,36 +11,36 @@ POSTGRES_PROPERTIES = {
 # =========================
 # load row data to bronze table
 
-def write_to_postgres_bronze(batch_df, batch_id):
+# def write_to_postgres_bronze(batch_df, batch_id):
 
-    print(f"Writing BRONZE batch {batch_id}")
+#     print(f"Writing BRONZE batch {batch_id}")
 
-    (
-        batch_df.write
-        .mode("append")
-        .jdbc(
-            url=POSTGRES_URL,
-            table="iot_events",
-            properties=POSTGRES_PROPERTIES
-        )
-    )
+#     (
+#         batch_df.write
+#         .mode("append")
+#         .jdbc(
+#             url=POSTGRES_URL,
+#             table="iot_events",
+#             properties=POSTGRES_PROPERTIES
+#         )
+#     )
 
 
-# =========================
-# load enhanced data to silver table
-def write_to_postgres_silver(batch_df, batch_id):
+# # =========================
+# # load enhanced data to silver table
+# def write_to_postgres_silver(batch_df, batch_id):
 
-    print(f"Writing SILVER batch {batch_id}")
+#     print(f"Writing SILVER batch {batch_id}")
 
-    (
-        batch_df.write
-        .mode("append")
-        .jdbc(
-            url=POSTGRES_URL,
-            table="iot_events_enhanced",
-            properties=POSTGRES_PROPERTIES
-        )
-    )
+#     (
+#         batch_df.write
+#         .mode("append")
+#         .jdbc(
+#             url=POSTGRES_URL,
+#             table="iot_events_enhanced",
+#             properties=POSTGRES_PROPERTIES
+#         )
+#     )
 
 # =========================
 # load macihne summary data to gold  table

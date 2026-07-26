@@ -1,7 +1,7 @@
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import *
 from pyspark.sql.types import *
-from schema_df import iot_schema
+from schema_df import machine_schema, worker_schema
 from transformations import apply_transformations
 from aggregations import (
     machine_summary,
