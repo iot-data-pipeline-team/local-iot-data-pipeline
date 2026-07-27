@@ -133,7 +133,7 @@ def run_eda(batch_df, batch_id):
     batch_df.unpersist()
 
       # Sleep before processing the next batch
-    time.sleep(10)   # sleep 5 seconds
+    time.sleep(10)   # sleep 10 seconds
 
 query = (
     machine_flattened_df.writeStream
