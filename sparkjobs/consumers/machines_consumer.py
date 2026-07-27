@@ -1,10 +1,10 @@
-from time import time
+import time
 
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col, from_json, to_timestamp
 from sparkjobs.consumers.schema_df import machine_schema
 from sparkjobs.eda.machines.machine_eda import run_machine_eda
-
+from sparkjobs.validations.machine_validation import validate_machine_data
 
 # ======================================================
 # Configuration
@@ -120,26 +120,81 @@ machine_flattened_df = machine_events_df.select(
 
 # query.awaitTermination()
 
+# ===================================
+# run validations
+# validated_df = validate_machine_data(machine_flattened_df)
+# query = (
+#     validated_df.writeStream
+#     .format("console")
+#     .outputMode("append")
+#     .option("truncate", False)
+#     .start()
+# )
+
+# =================================================
+# run eda 
+validated_df = validate_machine_data(machine_flattened_df)
 
 def run_eda(batch_df, batch_id):
 
     print(f"\nProcessing Batch {batch_id}")
 
-    # Cache because many EDA functions read the DataFrame
     batch_df.cache()
 
-    run_machine_eda(batch_df)
+    # ---------------------------
+    # valid records
+    # ---------------------------
+    valid_df = batch_df.filter(col("is_valid"))
+
+    # ---------------------------
+    # invalid records
+    # ---------------------------
+    invalid_df = batch_df.filter(~col("is_valid"))
+
+    print(f"Valid rows   : {valid_df.count()}")
+    print(f"Invalid rows : {invalid_df.count()}")
+    print("\nInvalid Records")
+
+    invalid_df.select(
+        "event_id",
+        "machine_id",
+        "machine_type",
+        "is_valid"
+    ).show(truncate=False)
+
+    # ---------------------------
+    # EDA
+    # ---------------------------
+    run_machine_eda(valid_df)
+
+    # later
+    # write_bronze(valid_df)
+    # write_invalid(invalid_df)
 
     batch_df.unpersist()
 
-      # Sleep before processing the next batch
-    time.sleep(10)   # sleep 10 seconds
+    time.sleep(120)
+
+# query = (
+#     machine_flattened_df.writeStream
+#     .foreachBatch(run_eda)
+#     .outputMode("append")
+#     .start()
+# )
+
+
+
 
 query = (
-    machine_flattened_df.writeStream
+    validated_df.writeStream
     .foreachBatch(run_eda)
     .outputMode("append")
+    .option(
+        "checkpointLocation",
+        "checkpoints/machine_consumer"
+    )
     .start()
 )
 
 query.awaitTermination()
+
