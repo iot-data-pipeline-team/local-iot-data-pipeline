@@ -4,7 +4,9 @@ from pyspark.sql import SparkSession
 from pyspark.sql.functions import col, from_json, to_timestamp
 from sparkjobs.consumers.schema_df import machine_schema
 from sparkjobs.eda.machines.machine_eda import run_machine_eda
+from sparkjobs.transformations.machines_cleaning import clean_machine_data
 from sparkjobs.validations.machine_validation import validate_machine_data
+from sparkjobs.transformations.machines_enhancement import enhance_machine_data
 
 # ======================================================
 # Configuration
@@ -120,22 +122,10 @@ machine_flattened_df = machine_events_df.select(
 
 # query.awaitTermination()
 
-# ===================================
-# run validations
-# validated_df = validate_machine_data(machine_flattened_df)
-# query = (
-#     validated_df.writeStream
-#     .format("console")
-#     .outputMode("append")
-#     .option("truncate", False)
-#     .start()
-# )
 
 # =================================================
 # run eda 
-validated_df = validate_machine_data(machine_flattened_df)
-
-def run_eda(batch_df, batch_id):
+def process_batch(batch_df, batch_id):
 
     print(f"\nProcessing Batch {batch_id}")
 
@@ -162,32 +152,72 @@ def run_eda(batch_df, batch_id):
         "is_valid"
     ).show(truncate=False)
 
-    # ---------------------------
+   # ---------------------------
     # EDA
     # ---------------------------
-    run_machine_eda(valid_df)
+    run_machine_eda(batch_df)
 
-    # later
-    # write_bronze(valid_df)
-    # write_invalid(invalid_df)
+    # ---------------------------
+    # Cleaning
+    # ---------------------------
+    cleaned_df = clean_machine_data(valid_df)
+    # ---------------------------
+    # Enhancement
+    # ---------------------------
+    enhanced_df = enhance_machine_data(cleaned_df)
 
+    enhanced_df.cache()
+
+    # Cache because we'll display it more than once
+    cleaned_df.cache()
+
+    print("\nBefore Cleaning")
+    valid_df.select(
+        "machine_type",
+        "status",
+        "floor",
+        "error_code",
+        "temperature"
+    ).show(truncate=False)
+
+    print("\nAfter Cleaning")
+    cleaned_df.select(
+        "machine_type",
+        "status",
+        "floor",
+        "error_code",
+        "temperature"
+    ).show(truncate=False)
+
+    print("\nEnhanced Data")
+
+    enhanced_df.select(
+        "machine_id",
+        "machine_group",
+        "temperature_status",
+        "vibration_status",
+        "rpm_status",
+        "power_status",
+        "running_flag",
+        "health_score",
+        "risk_score",
+        "fault_category"
+    ).show(truncate=False)
+
+    enhanced_df.unpersist()
+    cleaned_df.unpersist()
     batch_df.unpersist()
 
-    time.sleep(120)
 
-# query = (
-#     machine_flattened_df.writeStream
-#     .foreachBatch(run_eda)
-#     .outputMode("append")
-#     .start()
-# )
+# ===================================
+# run validations
 
 
+validated_df = validate_machine_data(machine_flattened_df)
 
-
-query = (
+query_validate = (
     validated_df.writeStream
-    .foreachBatch(run_eda)
+    .foreachBatch(process_batch)
     .outputMode("append")
     .option(
         "checkpointLocation",
@@ -196,5 +226,26 @@ query = (
     .start()
 )
 
-query.awaitTermination()
+query_validate.awaitTermination()
+
+
+
+# ===================================
+# run cleaning
+# run validations
+
+
+# cleaned_df = clean_machine_data(validated_df)
+# query_clean = (
+#     cleaned_df.writeStream
+#     .foreachBatch(process_batch)
+#     .outputMode("append")
+#     .option(
+#         "checkpointLocation",
+#         "checkpoints/machine_consumer"
+#     )
+#     .start()
+# )
+
+# query_clean.awaitTermination()
 
