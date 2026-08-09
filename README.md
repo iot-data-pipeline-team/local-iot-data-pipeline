@@ -53,7 +53,7 @@ The project is organized into separate components for event generation, Kafka co
 LOCAL-IOT-DATA-PIPELINE/
 │
 ├── producers/
-│   ├── __init__.py
+│   ├── README.md              
 │   ├── kafka_producer.py
 │   ├── machines_producer.py
 │   └── workers_producer.py
@@ -61,12 +61,12 @@ LOCAL-IOT-DATA-PIPELINE/
 ├── sparkjobs/
 │   │
 │   ├── aggregations/
+│   │   ├── README.md          
 │   │   ├── __init__.py
 │   │   └── machines_aggregations.py
 │   │
-│   ├── checkpoints/
-│   │
 │   ├── consumers/
+│   │   ├── README.md          
 │   │   ├── __init__.py
 │   │   ├── kafka_consumer.py
 │   │   ├── machines_consumer.py
@@ -75,6 +75,7 @@ LOCAL-IOT-DATA-PIPELINE/
 │   │
 │   ├── eda/
 │   │   └── machines/
+│   │       ├── README.md       
 │   │       ├── __init__.py
 │   │       ├── machine_data_quality.py
 │   │       ├── machine_eda.py
@@ -82,23 +83,42 @@ LOCAL-IOT-DATA-PIPELINE/
 │   │       └── machine_statistics.py
 │   │
 │   ├── transformations/
+│   │   ├── README.md          
 │   │   ├── __init__.py
 │   │   ├── machines_cleaning.py
 │   │   └── machines_enhancement.py
 │   │
-│   ├── validations/
-│   │   ├── __init__.py
-│   │   └── machine_validation.py
-│   │
-│   └── __init__.py
+│   └── validations/
+│       ├── README.md          
+│       ├── __init__.py
+│       └── machine_validation.py
 │
 ├── checkpoints/
 │   └── machine_consumer/
 │
 ├── .gitignore
 ├── docker-compose.yml
-└── README.md
+└── README.md                  ← Main project documentation
 ```
+--- 
+# Project Documentation
+
+This section provides detailed documentation for the different components of the IoT data pipeline.
+
+The project follows a modular architecture where each stage of the pipeline is implemented independently and documented separately.
+
+## Documentation Structure
+
+| Component | Folder | Documentation |
+|---|---|---|
+| **Producers** | `producers/` | [Producers Documentation](producers/README.md) |
+| **Kafka Consumers** | `sparkjobs/consumers/` | [Consumers Documentation](sparkjobs/consumers/README.md) |
+| **Machine EDA** | `sparkjobs/eda/machines/` | [Machine EDA Documentation](sparkjobs/eda/machines/README.md) |
+| **Data Validation** | `sparkjobs/validations/` | [Validation Documentation](sparkjobs/validations/README.md) |
+| **Data Cleaning** | `sparkjobs/transformations/machines_cleaning.py` | [Data Cleaning Documentation](sparkjobs/transformations/README.md) |
+| **Data Enhancement** | `sparkjobs/transformations/machines_enhancement.py` | [Data Enhancement Documentation](sparkjobs/transformations/README.md) |
+| **Machine Aggregations** | `sparkjobs/aggregations/` | [Aggregations Documentation](sparkjobs/aggregations/README.md) |
+| **Checkpoints** | `checkpoints/` | [Checkpoint Documentation](checkpoints/README.md) |
 
 ---
 
