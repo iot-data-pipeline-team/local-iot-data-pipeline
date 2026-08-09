@@ -17,7 +17,7 @@ Schema Exploration → Data Quality → Exploratory Statistics
 ```
 ---
 
-# Machine Schema Exploration
+## Machine Schema Exploration
 
 `machine_schema_exploration.py` provides reusable PySpark functions for inspecting the structure and schema of the machine sensor DataFrame before data quality and statistical analysis.
 
@@ -39,30 +39,11 @@ This shows:
 
 ---
 
-```python
-explore_columns(df)
-```
-Prints all column names with their corresponding position in the DataFrame.
-
-Example:
-
-COLUMNS (10)
-----------------------------------------------------------------------
- 1. event_id
- 2. event_time
- 3. machine_id
- 4. machine_type
- ...
-
-This provides a quick overview of the available fields.
-
----
-
 ### `explore_columns(df)`
 
 Prints all column names with their corresponding position in the DataFrame.
 
-Example:
+#### Example:
 
 ```text
 COLUMNS (10)
@@ -85,12 +66,14 @@ Provides a quick overview of the DataFrame by displaying:
 - Total number of columns
 - Column names
 
-Example:
+#### Example:
+```text
 ======================================================================
 DATAFRAME SUMMARY
 ======================================================================
 Number of Columns : 21
 Column Names      : event_id, event_time, machine_id, machine_type, floor, shift, status, ...
+```
 
 ---
 
@@ -103,11 +86,13 @@ Classifies the DataFrame columns into four categories based on their Spark data 
 - Boolean
 - Timestamp
 
-# Example:
+#### Example:
 
-# COLUMN CATEGORIES
+```text
+COLUMN CATEGORIES
 
 Numeric (4): ['temperature', 'vibration', 'rpm', 'power_kw']
 Categorical (6): ['event_id', 'machine_id', 'machine_type', 'floor', 'shift', 'status']
 Boolean (1): ['is_fault']
 Timestamp (1): ['event_time']
+```
