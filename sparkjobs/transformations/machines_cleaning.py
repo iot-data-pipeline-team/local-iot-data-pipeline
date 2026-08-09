@@ -51,9 +51,6 @@ def clean_empty_strings(df):
     return df
 
 
-
-
-
 def round_numeric_values(df):
 
     numeric_columns = [
