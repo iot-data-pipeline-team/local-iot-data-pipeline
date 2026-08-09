@@ -96,3 +96,187 @@ Categorical (6): ['event_id', 'machine_id', 'machine_type', 'floor', 'shift', 's
 Boolean (1): ['is_fault']
 Timestamp (1): ['event_time']
 ```
+
+--- 
+# Machine Data Quality
+
+`machine_data_quality.py` contains reusable PySpark functions for identifying data quality issues in the machine sensor DataFrame.
+
+The module validates missing values, empty strings, duplicates, categorical values, numeric ranges, outliers, business rules, machine-specific sensors, and timestamps.
+
+## Functions
+
+### `check_nulls(df)`
+
+Checks for NULL values across event fields, machine attributes, common sensors, and machine-specific sensors.
+
+# Example:
+
+# NULL VALUE ANALYSIS
+
+total_rows              : 1000
+event_id_null           : 0
+event_time_null         : 5
+machine_id_null         : 0
+temperature_null        : 3
+rpm_null                : 2
+cnc_oil_null            : 8
+...
+
+---
+
+### `check_empty_strings(df)`
+
+Checks important string columns for empty or whitespace-only values using `trim()`.
+
+# Example:
+
+# EMPTY STRING ANALYSIS
+
+event_id_empty          : 0
+machine_id_empty        : 2
+machine_type_empty      : 0
+floor_empty             : 0
+shift_empty             : 1
+status_empty            : 0
+
+---
+
+### `check_duplicate_event_ids(df)`
+
+Identifies duplicate records based on `event_id` by grouping event IDs and finding those that occur more than once.
+
+# Example:
+
+# DUPLICATE EVENT IDs
+
+event_id    count
+---------   -----
+EVT001        2
+EVT015        3
+
+---
+
+### `check_duplicate_machine_timestamp(df)`
+
+Identifies potential duplicate sensor readings by checking repeated combinations of `machine_id` and `event_time`.
+
+# Example:
+
+# DUPLICATE MACHINE + TIMESTAMP
+
+machine_id    event_time              count
+----------    -------------------     -----
+CNC_01        2026-08-01 10:00:00       2
+
+---
+
+### `check_invalid_categories(df)`
+
+Validates categorical columns against the expected machine domain values.
+
+Validated fields:
+
+- `status`
+- `shift`
+- `floor`
+- `machine_type`
+
+# Example:
+
+# CATEGORY VALIDATION
+
+invalid_status          : 2
+invalid_shift           : 0
+invalid_floor           : 1
+invalid_machine_type    : 0
+
+---
+
+### `check_numeric_ranges(df)`
+
+Checks sensor values for logically invalid numeric ranges.
+
+Validated conditions include:
+
+- Temperature above `150`
+- Temperature below `-20`
+- Negative RPM
+- Negative power consumption
+- Negative vibration
+
+# Example:
+
+# NUMERIC RANGE VALIDATION
+
+temperature_too_high    : 0
+temperature_too_low     : 0
+negative_rpm            : 1
+negative_power          : 0
+negative_vibration      : 0
+
+---
+
+### `detect_outliers(df)`
+
+Identifies potential extreme sensor values that may require further investigation.
+
+Current thresholds include:
+
+- Temperature above `120`
+- RPM above `5000`
+- Vibration above `15`
+
+# Example:
+
+# POTENTIAL OUTLIERS
+
+high_temperature        : 4
+high_rpm                : 2
+high_vibration          : 1
+
+---
+
+### `check_fault_consistency(df)`
+
+Validates the relationship between `is_fault` and `error_code`.
+
+It identifies:
+
+- Error codes without a fault
+- Faults without an error code
+
+# Example:
+
+# FAULT CONSISTENCY
+
+error_code_without_fault    : 3
+fault_without_error_code    : 1
+
+---
+
+### `check_machine_specific_sensors(df)`
+
+Validates that machine-specific sensor values are available for the corresponding machine type.
+
+Expected sensors:
+
+```text
+CNC Machine
+    ├── cnc_oil
+    └── coolant_pressure
+
+Robot Arm
+    ├── joint_torque
+    └── force
+
+Conveyor Belt
+    ├── belt_tension
+    └── load_weight
+
+Pump
+    ├── pump_oil
+    ├── flow_rate
+    └── inlet_pressure
+```
+---
