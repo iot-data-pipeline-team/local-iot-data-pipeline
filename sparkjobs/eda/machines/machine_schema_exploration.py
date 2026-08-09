@@ -26,35 +26,8 @@ def explore_columns(df):
         print(f"{i:2}. {column}")
 
 
-def explore_data_types(df):
-    """
-    Print the data type of every column.
-    """
-    print("\n" + "=" * 70)
-    print("COLUMN DATA TYPES")
-    print("=" * 70)
-
-    for column, dtype in df.dtypes:
-        print(f"{column:<25} {dtype}")
 
 
-def explore_nullable_columns(df):
-    """
-    Print nullable information for every column.
-    """
-    print("\n" + "=" * 70)
-    print("NULLABLE COLUMNS")
-    print("=" * 70)
-
-    print(f"{'Column':<25} {'Type':<20} {'Nullable'}")
-    print("-" * 70)
-
-    for field in df.schema.fields:
-        print(
-            f"{field.name:<25}"
-            f"{field.dataType.simpleString():<20}"
-            f"{field.nullable}"
-        )
 
 def explore_summary(df):
     """
