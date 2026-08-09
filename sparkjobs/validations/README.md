@@ -272,20 +272,26 @@ The function then adds two final columns:
   - Stores the timestamp when the validation was performed.
 
 ### Example Output
-### Example Output
 
-| event_id | machine_id | machine_type | temperature_valid | rpm_valid | is_valid | validation_time |
-|----------|------------|--------------|-------------------|-----------|----------|-----------------|
-| EVT001   | CNC_01     | cnc_machine  | true              | true      | true     | 2026-08-09 13:20 |
-| EVT002   | CNC_01     | cnc_machine  | false             | true      | false    | 2026-08-09 13:20 |
-| EVT003   | ROB_01     | robot_arm    | true              | false     | false    | 2026-08-09 13:20 |
-| EVT004   | PMP_01     | pump         | true              | true      | true     | 2026-08-09 13:20 |
+The function preserves all original DataFrame columns and adds the validation columns.
+
+For readability, the following example shows only selected columns from the resulting DataFrame:
+
+```text
++--------+----------+------------+-----------+------+---------+-------------------+
+|event_id|machine_id|machine_type|temperature|rpm   |is_valid |validation_time   |
++--------+----------+------------+-----------+------+---------+-------------------+
+|EVT001  |CNC_01    |cnc_machine |75.4       |1500  |true     |2026-08-09 13:20:15|
+|EVT002  |CNC_01    |cnc_machine |165.2      |1500  |false    |2026-08-09 13:20:15|
+|EVT003  |ROB_01    |robot_arm   |68.7       |-100  |false    |2026-08-09 13:20:15|
+|EVT004  |PMP_01    |pump        |72.5       |1500  |true     |2026-08-09 13:20:15|
++--------+----------+------------+-----------+------+---------+-------------------+
 ```
 ### For example:
 
 - The first record passes all validation checks, so `is_valid` is `true`.
-- The second record has an invalid temperature, so `is_valid` is `false`.
-- The third record has an invalid RPM value, so `is_valid` is `false`.
+- The second record has an invalid `temperature` value, so `temperature_valid` is `false` and `is_valid` is `false`.
+- The third record has an invalid `rpm` value, so `rpm_valid` is `false` and `is_valid` is `false`.
 - The fourth record passes all validation checks, so `is_valid` is `true`.
 
 The original DataFrame columns are preserved, while the individual validation results, `is_valid`, and `validation_time` are added as new columns.
