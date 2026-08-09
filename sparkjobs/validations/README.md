@@ -272,15 +272,15 @@ The function then adds two final columns:
   - Stores the timestamp when the validation was performed.
 
 ### Example Output
-+----------+----------+----------------+------------------+---------------+---------+----------------+
-|event_id  |machine_id|machine_type   |temperature_valid |rpm_valid      |is_valid |validation_time |
-+----------+----------+----------------+------------------+---------------+---------+----------------+
-|EVT001    |CNC_01    |cnc_machine     |true              |true           |true     |2026-08-09 13:20|
-|EVT002    |CNC_01    |cnc_machine     |false             |true           |false    |2026-08-09 13:20|
-|EVT003    |ROB_01    |robot_arm       |true              |false          |false    |2026-08-09 13:20|
-|EVT004    |PMP_01    |pump            |true              |true           |true     |2026-08-09 13:20|
-+----------+----------+----------------+------------------+---------------+---------+----------------+
+### Example Output
 
+| event_id | machine_id | machine_type | temperature_valid | rpm_valid | is_valid | validation_time |
+|----------|------------|--------------|-------------------|-----------|----------|-----------------|
+| EVT001   | CNC_01     | cnc_machine  | true              | true      | true     | 2026-08-09 13:20 |
+| EVT002   | CNC_01     | cnc_machine  | false             | true      | false    | 2026-08-09 13:20 |
+| EVT003   | ROB_01     | robot_arm    | true              | false     | false    | 2026-08-09 13:20 |
+| EVT004   | PMP_01     | pump         | true              | true      | true     | 2026-08-09 13:20 |
+```
 ### For example:
 
 - The first record passes all validation checks, so `is_valid` is `true`.
