@@ -278,14 +278,15 @@ The function preserves all original DataFrame columns and adds the validation co
 For readability, the following example shows only selected columns from the resulting DataFrame:
 
 ```text
-+--------+----------+------------+-----------+------+---------+-------------------+
-|event_id|machine_id|machine_type|temperature|rpm   |is_valid |validation_time   |
-+--------+----------+------------+-----------+------+---------+-------------------+
-|EVT001  |CNC_01    |cnc_machine |75.4       |1500  |true     |2026-08-09 13:20:15|
-|EVT002  |CNC_01    |cnc_machine |165.2      |1500  |false    |2026-08-09 13:20:15|
-|EVT003  |ROB_01    |robot_arm   |68.7       |-100  |false    |2026-08-09 13:20:15|
-|EVT004  |PMP_01    |pump        |72.5       |1500  |true     |2026-08-09 13:20:15|
-+--------+----------+------------+-----------+------+---------+-------------------+
++------------+-------+----------------+-----------------+-----------------+-----+
+|machine_type|cnc_oil|coolant_pressure|cnc_sensor_valid |robot_sensor_valid| ... |
++------------+-------+----------------+-----------------+-----------------+-----+
+|cnc_machine |82.5   |3.2             |true             |true             | ... |
+|cnc_machine |null   |3.1             |false            |true             | ... |
+|robot_arm   |null   |null            |true             |true             | ... |
+|robot_arm   |null   |null            |true             |false            | ... |
+|pump        |78.4   |null            |true             |true             | ... |
++------------+-------+----------------+-----------------+-----------------+-----+
 ```
 ### For example:
 
