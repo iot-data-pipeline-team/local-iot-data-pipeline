@@ -50,6 +50,7 @@ def add_event_hour(df):
         "event_hour",
         hour(col("event_time"))
     )
+
 def add_time_bucket(df):
     return df.withColumn(
         "time_bucket",
