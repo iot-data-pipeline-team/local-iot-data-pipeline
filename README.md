@@ -98,6 +98,7 @@ LOCAL-IOT-DATA-PIPELINE/
 ├── .gitignore
 ├── docker-compose.yml
 └── README.md
+```
 
 ---
 
@@ -137,12 +138,12 @@ The machine producer simulates industrial equipment operating continuously insid
 
 The current machines include:
 
-| Machine ID | Machine Type   | Floor |
-|------------|----------------|-------|
-| `CNC_01`   | CNC Machine    | A     |
-| `ROB_01`   | Robot Arm      | B     |
-| `CNV_01`   | Conveyor Belt   | C     |
-| `PMP_01`   | Pump           | C     |
+| Machine ID | Machine Type  | Floor |
+|------------|---------------|-------|
+| `CNC_01`   | CNC Machine   | A     |
+| `ROB_01`   | Robot Arm     | B     |
+| `CNV_01`   | Conveyor Belt  | C     |
+| `PMP_01`   | Pump          | C     |
 
 The producer generates machine-specific sensor measurements according to the characteristics of each machine.
 
@@ -172,8 +173,10 @@ Events are published to:
 
 ```text
 sensor-events
+```
 
 ---
+
 # 3. Worker Data Producer
 
 The worker producer simulates workers operating inside the industrial environment.
@@ -203,6 +206,7 @@ Events are published to:
 
 ```text
 worker-events
+```
 
 ---
 
@@ -224,15 +228,16 @@ Worker Producer ───────► worker-events ───┘
                                          │
                                          ▼
                                   Spark Streaming
+```
 
 Kafka provides the foundation for:
 
-  Event streaming
- - Decoupling producers and consumers
- - Distributed processing
- - Fault tolerance
- - Event buffering
- - Scalable data ingestion
+- Event streaming
+- Decoupling producers and consumers
+- Distributed processing
+- Fault tolerance
+- Event buffering
+- Scalable data ingestion
 
 Detailed Kafka documentation will be provided separately.
 
@@ -269,19 +274,20 @@ Aggregate
   │
   ▼
 Bronze / Silver / Gold
-
+```
 
 Spark Structured Streaming provides capabilities such as:
 
- - Continuous event processing
- - Event-time processing
- - Watermarking
- - Windowed aggregations
- - Streaming checkpoints
- - Fault recovery
- - Scalable distributed processing
+- Continuous event processing
+- Event-time processing
+- Watermarking
+- Windowed aggregations
+- Streaming checkpoints
+- Fault recovery
+- Scalable distributed processing
 
- ---
+---
+
 # Medallion Architecture
 
 The project follows the **Medallion Architecture** pattern.
@@ -308,24 +314,25 @@ The project follows the **Medallion Architecture** pattern.
               │ Business KPIs     │
               │ Aggregations      │
               └───────────────────┘
+```
 
 ### Bronze
 
- - Raw and minimally processed data.
+Raw and minimally processed data.
 
 ### Silver
 
- - Cleaned, validated, transformed, and enriched data.
+Cleaned, validated, transformed, and enriched data.
 
 ### Gold
 
- - Business-ready aggregations and KPIs.
+Business-ready aggregations and KPIs.
 
 This architecture separates the different levels of data processing and makes the pipeline easier to maintain and extend.
 
 ---
 
- # 6. Bronze Layer
+# 6. Bronze Layer
 
 The Bronze layer represents the raw ingestion layer.
 
@@ -352,10 +359,13 @@ Raw Events
   │
   ▼
 Bronze Layer
+```
+
+The detailed Bronze implementation will be documented separately.
 
 ---
 
-7. Silver Layer
+# 7. Silver Layer
 
 The Silver layer contains cleaned, transformed, and enriched events.
 
@@ -363,37 +373,47 @@ At this stage, raw sensor information is converted into more meaningful business
 
 Examples of Silver transformations include:
 
-Temperature Classification
+### Temperature Classification
+
+```text
 Critical → temperature > threshold
 Warning  → temperature > threshold
 Normal   → otherwise
-Vibration Classification
+```
+
+### Vibration Classification
+
+```text
 Critical → vibration > threshold
 Warning  → vibration > threshold
 Normal   → otherwise
-Fault Processing
+```
+
+### Fault Processing
 
 Machine fault information is converted into analytical flags that can be used by downstream aggregations.
 
-Time Attributes
+### Time Attributes
 
 Timestamp information can be used to derive:
 
-Event date
-Event hour
-Shift
-Time bucket
-Health and Risk Metrics
+- Event date
+- Event hour
+- Shift
+- Time bucket
+
+### Health and Risk Metrics
 
 The Silver layer can also calculate derived operational metrics such as:
 
-Machine health score
-Risk score
-Uptime flag
-Fault indicators
+- Machine health score
+- Risk score
+- Uptime flag
+- Fault indicators
 
 Conceptually:
 
+```text
 Bronze
   │
   ▼
@@ -407,10 +427,11 @@ Business Rules
   │
   ▼
 Silver
+```
 
 ---
 
-8. Gold Layer
+# 8. Gold Layer
 
 The Gold layer contains business-ready analytical datasets and KPIs.
 
@@ -418,13 +439,13 @@ Instead of individual raw events, the Gold layer focuses on aggregated informati
 
 Current analytical aggregations include:
 
-Machine Summary
-Hourly Summary
-Shift Summary
+- Machine Summary
+- Hourly Summary
+- Shift Summary
 
 The project is also being extended to support worker-related analytics.
 
---- 
+---
 
 # Technologies Used
 
@@ -484,63 +505,11 @@ Conda Environment
    ├── Python
    ├── PySpark
    └── Kafka Python Client
-   
-Docker is used to run infrastructure services such as the Kafka cluster.
-
----
-
-# Python Environment
-
-A dedicated Conda environment is recommended for the project.
-
-Create the environment:
-
-```bash
-conda create -n bigdata python=3.11
-
-Activate the environment:
-
-```bash
-conda activate bigdata
-
-the new structure 
-# Environment
-
-The project is designed to run locally using a Linux-based development environment.
-
-The current development environment includes:
-
-```text
-Windows
-   │
-   ▼
-WSL / Ubuntu
-   │
-   ▼
-Conda Environment
-   │
-   ├── Python
-   ├── PySpark
-   └── Kafka Python Client
+```
 
 Docker is used to run infrastructure services such as the Kafka cluster.
 
-Python Environment
-
-A dedicated Conda environment is recommended for the project.
-
-Example:
-
-conda create -n bigdata python=3.11
-conda activate bigdata
-
-
-Required Python packages include:
-
-pip install pyspark kafka-python
-
-
-Additional dependencies may be added as the project evolves.
+---
 
 # Python Environment
 
@@ -550,103 +519,23 @@ Create the environment:
 
 ```bash
 conda create -n bigdata python=3.11
+```
 
 Activate the environment:
 
+```bash
 conda activate bigdata
+```
 
 Install the required Python packages:
 
-pip install pyspark kafka-python
-
-Additional dependencies may be added as the project evolves.
-
-give me this answer as one markdown
-# Python Environment
-
-A dedicated Conda environment is recommended for the project.
-
-Create the environment:
-
-```bash
-conda create -n bigdata python=3.11
-
-Activate the environment:
-
-conda activate bigdata
-
-Install the required Python packages:
 ```bash
 pip install pyspark kafka-python
+```
+
 Additional dependencies may be added as the project evolves.
 
 ---
-
-# Java Environment
-
-Apache Spark requires Java.
-
-The project uses:
-
-Java 17+
-
-Java should be available through the system PATH.
-
-Verify the installation:
-
-```bash
-java -version
-
----
-
-# Docker Infrastructure
-
-Docker Compose is used to deploy the infrastructure required by the streaming pipeline.
-
-Current infrastructure includes:
-
-```text
-Docker Compose
-      │
-      ├── Kafka Broker 1
-      ├── Kafka Broker 2
-      ├── Kafka Broker 3
-      │
-      └── Other supporting services
-the new structure 
-# Python Environment
-
-A dedicated Conda environment is recommended for the project.
-
-Create the environment:
-
-```bash
-conda create -n bigdata python=3.11
-
-Activate the environment:
-
-conda activate bigdata
-
-Install the required Python packages:
-
-pip install pyspark kafka-python
-
-Additional dependencies may be added as the project evolves.
-
-Java Environment
-
-Apache Spark requires Java.
-
-The project uses:
-
-Java 17+
-
-
-Java should be available through the system PATH.
-
-Verify the installation:
-
-java -version
 
 # Java Environment
 
@@ -656,28 +545,17 @@ The project uses:
 
 ```text
 Java 17+
+```
 
-Java should be installed and available through the system PATH.
+Java should be installed and available through the system `PATH`.
 
 Verify the Java installation:
 
+```bash
 java -version
-Docker Infrastructure
+```
 
-Docker Compose is used to deploy the infrastructure required by the streaming pipeline.
-
-Current infrastructure includes:
-
-Docker Compose
-      │
-      ├── Kafka Broker 1
-      ├── Kafka Broker 2
-      ├── Kafka Broker 3
-      │
-      └── Other supporting services
-
-
-The Kafka brokers form a distributed Kafka cluster using KRaft mode.
+---
 
 # Docker Infrastructure
 
@@ -693,8 +571,9 @@ Docker Compose
       ├── Kafka Broker 3
       │
       └── Other supporting services
+```
 
-The Kafka brokers form a distributed Kafka cluster using KRaft mode.
+The Kafka brokers form a distributed Kafka cluster using **KRaft mode**.
 
 ---
 
@@ -705,6 +584,7 @@ The project currently uses two main Kafka topics:
 ```text
 sensor-events
 worker-events
+```
 
 ### Machine Events
 
@@ -713,14 +593,16 @@ Machine Producer
       │
       ▼
 sensor-events
+```
 
-### Workers Events
+### Worker Events
 
 ```text
 Worker Producer
       │
       ▼
 worker-events
+```
 
 The Kafka cluster consists of three brokers.
 
@@ -730,8 +612,7 @@ The Kafka cluster consists of three brokers.
 | kafka-2 | 9095          |
 | kafka-3 | 9096          |
 
-
-The exact connection configuration is maintained in the producer and Docker Compose configuration.
+The exact connection configuration is maintained in the producer scripts and Docker Compose configuration.
 
 ---
 
@@ -759,6 +640,4 @@ They are important for:
 - Stream recovery
 - Stateful processing
 - Windowed aggregations
-
-
 
