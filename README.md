@@ -660,4 +660,154 @@ They are important for:
 - Stream recovery
 - Stateful processing
 - Windowed aggregations
+---
+# How to Run the Project
 
+The project runs using **Docker for Kafka and supporting services**, while **Apache Spark/PySpark is installed and executed locally inside WSL (Ubuntu)**.
+
+## 1. Start Kafka Infrastructure
+
+From the project directory:
+
+```bash
+docker compose up -d
+```
+
+Verify that the containers are running:
+
+```bash
+docker ps
+```
+
+---
+
+## 2. Activate the WSL Environment
+
+Open WSL Ubuntu and activate the Python environment:
+
+```bash
+conda activate bigdata
+```
+
+Verify the local Spark installation:
+
+```bash
+spark-submit --version
+```
+
+> **Important:** Spark is **not running inside Docker**. The project uses the local Apache Spark/PySpark installation in WSL.
+
+---
+
+## 3. Start the Machine Producer
+
+```bash
+python machines_producer.py
+```
+
+The producer sends machine sensor events to the Kafka topic:
+
+```text
+sensor-events
+```
+
+---
+
+## 4. Start the Worker Producer
+
+Open another WSL terminal:
+
+```bash
+conda activate bigdata
+python workers_producer.py
+```
+
+The producer sends worker events to:
+
+```text
+worker-events
+```
+
+---
+
+## 5. Start the Spark Consumer
+
+Open another WSL terminal:
+
+```bash
+conda activate bigdata
+python machines_consumer.py
+```
+
+The consumer uses **local PySpark** to process the streaming machine data:
+
+```text
+Kafka
+  │
+  ▼
+Local Spark Structured Streaming
+  │
+  ▼
+Validation
+  │
+  ▼
+EDA
+  │
+  ▼
+Cleaning
+  │
+  ▼
+Enhancement
+  │
+  ▼
+Console Output
+```
+
+---
+
+## 6. Stop the Project
+
+Stop the Python processes with:
+
+```text
+Ctrl + C
+```
+
+Then stop the Docker infrastructure:
+
+```bash
+docker compose down
+```
+
+### Quick Start
+
+```bash
+# Terminal 1 - Start Kafka
+docker compose up -d
+
+# Terminal 2 - Machine Producer
+conda activate bigdata
+python machines_producer.py
+
+# Terminal 3 - Worker Producer
+conda activate bigdata
+python workers_producer.py
+
+# Terminal 4 - Local Spark Consumer
+conda activate bigdata
+python machines_consumer.py
+```
+
+> **Architecture:** Kafka runs in Docker, while **Apache Spark/PySpark runs locally in WSL Ubuntu**.
+
+---
+# Future Work
+
+* **Apache Airflow:** Orchestrate, schedule, monitor, and retry pipeline tasks.
+* **Spark Watermarks:** Handle event-time data and control late-arriving events.
+* **Windowed Aggregations:** Calculate time-based metrics such as average temperature and fault counts.
+* **Late Events Handling:** Detect and properly process delayed events.
+* **Load Medalian architecture into postgres database.
+* **Add paln for disater recovery.
+
+These improvements will make the pipeline more reliable and production-ready.
