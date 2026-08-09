@@ -39,11 +39,7 @@ def schema_exploration(df):
     print_subheader("Columns")
     explore_columns(df)
 
-    print_subheader("Data Types")
-    explore_data_types(df)
-
-    print_subheader("Nullable Columns")
-    explore_nullable_columns(df)
+    
 
     print_subheader("Column Categories")
     explore_column_categories(df)
@@ -96,16 +92,29 @@ def data_quality(df):
 # ==========================================================
 # Exploratory Statistics
 # ==========================================================
-
 def exploratory_statistics(df):
 
     print_header("EXPLORATORY STATISTICS")
 
+    # ======================================================
+    # Basic Sensor Statistics
+    # ======================================================
+
     print_subheader("Sensor Statistics")
     sensor_statistics(df).show(truncate=False)
 
+    print_subheader("Machine Numeric Summary")
+    machine_numeric_summary(df).show(truncate=False)
+
+    # ======================================================
+    # Frequency Distributions
+    # ======================================================
+
     print_subheader("Machine Type Distribution")
     machine_distribution(df).show(truncate=False)
+
+    print_subheader("Machine ID Distribution")
+    machine_id_distribution(df).show(truncate=False)
 
     print_subheader("Status Distribution")
     status_distribution(df).show(truncate=False)
@@ -113,12 +122,31 @@ def exploratory_statistics(df):
     print_subheader("Shift Distribution")
     shift_distribution(df).show(truncate=False)
 
+    print_subheader("Floor Distribution")
+    floor_distribution(df).show(truncate=False)
+
     print_subheader("Fault Distribution")
     fault_distribution(df).show(truncate=False)
 
     print_subheader("Error Code Distribution")
     error_code_distribution(df).show(truncate=False)
 
+    # ======================================================
+    # Fault Analysis
+    # ======================================================
+
+    print_subheader("Fault Rate by Machine Type")
+    fault_rate_by_machine(df).show(truncate=False)
+
+    print_subheader("Fault Rate by Shift")
+    fault_rate_by_shift(df).show(truncate=False)
+
+    # ======================================================
+    # Sensor Analysis by Machine Type
+    # ======================================================
+
+    print_subheader("Average Sensor Values by Machine Type")
+    average_sensor_values(df).show(truncate=False)
 
 # ==========================================================
 # Main EDA Pipeline
