@@ -473,5 +473,512 @@ cnc_machine          74.25              2.51         1498.32      4.42
 conveyor_belt        55.18              1.82          901.45      2.10
 pump                 62.43              2.15         1205.76      3.25
 robot_arm            65.72              2.24         1501.87      4.68
+```
+---
+
+# Machine EDA
+### Machine EDA Architecture
+
+The `machine_eda.py` module orchestrates the complete exploratory data analysis workflow for machine sensor data.
+
+```text
+run_machine_eda(df)
+│
+├── 1. schema_exploration(df)
+│   │
+│   ├── Dataset Summary
+│   │   ├── df.count()
+│   │   └── len(df.columns)
+│   │
+│   ├── explore_summary()
+│   ├── explore_schema()
+│   ├── explore_columns()
+│   ├── explore_column_categories()
+│   └── df.show(5)
+│
+├── 2. data_quality(df)
+│   │
+│   ├── Null Value Analysis
+│   │   └── check_nulls()
+│   │
+│   ├── Empty String Analysis
+│   │   └── check_empty_strings()
+│   │
+│   ├── Category Validation
+│   │   └── check_invalid_categories()
+│   │
+│   ├── Numeric Range Validation
+│   │   └── check_numeric_ranges()
+│   │
+│   ├── Business Rule Validation
+│   │   └── check_fault_consistency()
+│   │
+│   ├── Machine-Specific Sensor Validation
+│   │   └── check_machine_specific_sensors()
+│   │
+│   ├── Timestamp Validation
+│   │   └── check_invalid_timestamps()
+│   │
+│   ├── Duplicate Event IDs
+│   │   └── check_duplicate_event_ids()
+│   │
+│   ├── Duplicate Machine + Timestamp
+│   │   └── check_duplicate_machine_timestamp()
+│   │
+│   └── Potential Outliers
+│       └── detect_outliers()
+│
+└── 3. exploratory_statistics(df)
+    │
+    ├── Basic Sensor Statistics
+    │   ├── sensor_statistics()
+    │   └── machine_numeric_summary()
+    │
+    ├── Frequency Distributions
+    │   ├── machine_distribution()
+    │   ├── machine_id_distribution()
+    │   ├── status_distribution()
+    │   ├── shift_distribution()
+    │   ├── floor_distribution()
+    │   ├── fault_distribution()
+    │   └── error_code_distribution()
+    │
+    ├── Fault Analysis
+    │   ├── fault_rate_by_machine()
+    │   └── fault_rate_by_shift()
+    │
+    └── Sensor Analysis by Machine Type
+        └── average_sensor_values()
+```
+---
+
+# Module Dependencies
+
+```text
+machine_eda.py
+│
+├── machine_schema_exploration.py
+│   ├── explore_summary()
+│   ├── explore_schema()
+│   ├── explore_columns()
+│   └── explore_column_categories()
+│
+├── machine_data_quality.py
+│   ├── check_nulls()
+│   ├── check_empty_strings()
+│   ├── check_invalid_categories()
+│   ├── check_numeric_ranges()
+│   ├── check_fault_consistency()
+│   ├── check_machine_specific_sensors()
+│   ├── check_invalid_timestamps()
+│   ├── check_duplicate_event_ids()
+│   ├── check_duplicate_machine_timestamp()
+│   └── detect_outliers()
+│
+└── machine_statistics.py
+    ├── sensor_statistics()
+    ├── machine_numeric_summary()
+    ├── machine_distribution()
+    ├── machine_id_distribution()
+    ├── status_distribution()
+    ├── shift_distribution()
+    ├── floor_distribution()
+    ├── fault_distribution()
+    ├── error_code_distribution()
+    ├── fault_rate_by_machine()
+    ├── fault_rate_by_shift()
+    └── average_sensor_values()
+```
+--- 
+
+# Execution Flow
+
+```text
+Input Machine DataFrame
+        │
+        ▼
+Schema Exploration
+        │
+        ▼
+Data Quality Assessment
+        │
+        ▼
+Exploratory Statistics
+        │
+        ▼
+EDA Results
+        │
+        ▼
+EDA Completed
+```
+---
+
+### `schema_exploration(df)`
+
+Runs the schema exploration functions and displays information about the dataset structure.
+
+### Example Output
+
+```text
+SCHEMA EXPLORATION
+
+Dataset Summary
+Total Records : 1,000
+Total Columns : 21
+
+Schema
+root
+ |-- event_id: string (nullable = true)
+ |-- event_time: timestamp (nullable = true)
+ |-- machine_id: string (nullable = true)
+ |-- machine_type: string (nullable = true)
+ |-- floor: string (nullable = true)
+ |-- shift: string (nullable = true)
+ |-- status: string (nullable = true)
+ |-- error_code: string (nullable = true)
+ |-- temperature: double (nullable = true)
+ |-- vibration: double (nullable = true)
+ |-- rpm: double (nullable = true)
+ |-- power_kw: double (nullable = true)
+ |-- is_fault: boolean (nullable = true)
+ |-- cnc_oil: double (nullable = true)
+ |-- coolant_pressure: double (nullable = true)
+ |-- joint_torque: double (nullable = true)
+ |-- force: double (nullable = true)
+ |-- belt_tension: double (nullable = true)
+ |-- load_weight: double (nullable = true)
+ |-- pump_oil: double (nullable = true)
+ |-- flow_rate: double (nullable = true)
+
+Columns
+ 1. event_id
+ 2. event_time
+ 3. machine_id
+ 4. machine_type
+ 5. floor
+ 6. shift
+ 7. status
+ 8. error_code
+ 9. temperature
+10. vibration
+11. rpm
+12. power_kw
+13. is_fault
+14. cnc_oil
+15. coolant_pressure
+16. joint_torque
+17. force
+18. belt_tension
+19. load_weight
+20. pump_oil
+21. flow_rate
+
+Column Categories
+Numeric (13): [temperature, vibration, rpm, power_kw, cnc_oil,
+               coolant_pressure, joint_torque, force, belt_tension,
+               load_weight, pump_oil, flow_rate]
+
+Categorical (7): [event_id, machine_id, machine_type, floor,
+                  shift, status, error_code]
+
+Boolean (1): [is_fault]
+
+Timestamp (1): [event_time]
+
+Sample Records
++--------+-------------------+----------+-------------+-----+-------+--------+
+|event_id|event_time         |machine_id|machine_type |floor|shift  |status  |
++--------+-------------------+----------+-------------+-----+-------+--------+
+|EVT001  |2026-08-01 08:00:01|CNC_01    |cnc_machine  |A    |morning|running |
+|EVT002  |2026-08-01 08:00:02|ROB_01    |robot_arm    |B    |morning|running |
+|EVT003  |2026-08-01 08:00:03|CNV_01    |conveyor_belt|C    |morning|idle    |
+|EVT004  |2026-08-01 08:00:04|PMP_01    |pump         |C    |morning|running |
+|EVT005  |2026-08-01 08:00:05|CNC_01    |cnc_machine  |A    |morning|fault   |
++--------+-------------------+----------+-------------+-----+-------+--------+
+only showing top 5 rows
+```
+---
+
+### `data_quality(df)`
+
+Runs the complete machine data quality assessment by checking:
+
+- Missing values
+- Empty strings
+- Invalid categorical values
+- Invalid numeric ranges
+- Fault and error-code consistency
+- Machine-specific sensor values
+- Invalid timestamps
+- Duplicate event IDs
+- Duplicate machine and timestamp combinations
+- Potential outliers
+
+### Example Output
+
+```text
+DATA QUALITY
+
+Null Value Analysis
++----------+-------------+----------------+---------------+------------------+
+|total_rows|event_id_null|event_time_null |machine_id_null|machine_type_null |
++----------+-------------+----------------+---------------+------------------+
+|1000      |0            |0               |0              |0                 |
++----------+-------------+----------------+---------------+------------------+
+
+Empty String Analysis
++----------------+----------------+--------------------+------------+-----------+------------+
+|event_id_empty  |machine_id_empty|machine_type_empty  |floor_empty |shift_empty |status_empty|
++----------------+----------------+--------------------+------------+-----------+------------+
+|0               |0               |0                   |0           |0          |0           |
++----------------+----------------+--------------------+------------+-----------+------------+
+
+Category Validation
++--------------+-------------+-------------+--------------------+
+|invalid_status|invalid_shift|invalid_floor|invalid_machine_type|
++--------------+-------------+-------------+--------------------+
+|0             |0            |0            |0                   |
++--------------+-------------+-------------+--------------------+
+
+Numeric Range Validation
++--------------------+-------------------+-------------+--------------+------------------+
+|temperature_too_high|temperature_too_low|negative_rpm |negative_power|negative_vibration|
++--------------------+-------------------+-------------+--------------+------------------+
+|0                   |0                  |0            |0             |0                 |
++--------------------+-------------------+-------------+--------------+------------------+
+
+Business Rule Validation
++-------------------------+----------------------+
+|error_code_without_fault|fault_without_error_code|
++-------------------------+----------------------+
+|0                        |0                     |
++-------------------------+----------------------+
+
+Machine Specific Sensor Validation
++-----------------+-----------------------+--------------------+-------------+-------------------------+
+|missing_cnc_oil  |missing_coolant_pressure|missing_joint_torque|missing_force|missing_belt_tension     |
++-----------------+-----------------------+--------------------+-------------+-------------------------+
+|0                |0                      |0                   |0            |0                        |
++-----------------+-----------------------+--------------------+-------------+-------------------------+
+
+Timestamp Validation
++-----------------+
+|invalid_timestamp|
++-----------------+
+|0                |
++-----------------+
+
+Duplicate Event IDs
++---------+-----+
+|event_id |count|
++---------+-----+
++---------+-----+
+
+Duplicate Machine + Timestamp
++----------+-------------------+-----+
+|machine_id|event_time         |count|
++----------+-------------------+-----+
++----------+-------------------+-----+
+
+Potential Outliers
++---------------+---------+--------------+
+|high_temperature|high_rpm|high_vibration|
++---------------+---------+--------------+
+|12             |3        |5             |
++---------------+---------+--------------+
+```
+---
+
+### `exploratory_statistics(df)`
+
+Runs the complete exploratory statistical analysis for machine sensor data.
+
+The function analyzes:
+
+- Basic sensor statistics
+- Numeric summaries
+- Machine type distribution
+- Machine ID distribution
+- Status distribution
+- Shift distribution
+- Floor distribution
+- Fault distribution
+- Error code distribution
+
+### Example Output
+
+```text
+EXPLORATORY STATISTICS
+
+Sensor Statistics
++---------------+---------------+----------------+----------------+
+|temperature_min|temperature_max|temperature_avg |temperature_std |
++---------------+---------------+----------------+----------------+
+|48.32          |128.74         |72.56           |14.82           |
++---------------+---------------+----------------+----------------+
+
+Machine Numeric Summary
++-------+------------------+------------------+------------------+------------------+
+|summary|temperature       |vibration         |rpm               |power_kw          |
++-------+------------------+------------------+------------------+------------------+
+|count  |1000              |1000              |1000              |1000              |
+|mean   |72.56             |3.42              |1254.73            |3.84              |
+|stddev |14.82             |1.87              |342.51             |1.21              |
+|min    |48.32             |0.52              |850.00             |1.42              |
+|max    |128.74            |16.42             |4820.00            |8.91              |
++-------+------------------+------------------+------------------+------------------+
+
+Machine Type Distribution
++-------------+-----+
+|machine_type |count|
++-------------+-----+
+|cnc_machine  |280  |
+|robot_arm    |260  |
+|conveyor_belt|240  |
+|pump         |220  |
++-------------+-----+
+
+Machine ID Distribution
++----------+-----+
+|machine_id|count|
++----------+-----+
+|CNC_01    |280  |
+|ROB_01    |260  |
+|CNV_01    |240  |
+|PMP_01    |220  |
++----------+-----+
+
+Status Distribution
++-------+-----+
+|status |count|
++-------+-----+
+|running|720  |
+|idle   |180  |
+|fault  |100  |
++-------+-----+
+
+Shift Distribution
++-------+-----+
+|shift  |count|
++-------+-----+
+|morning|400  |
+|evening|350  |
+|night  |250  |
++-------+-----+
+
+Floor Distribution
++-----+-----+
+|floor|count|
++-----+-----+
+|A    |300  |
+|B    |280  |
+|C    |420  |
++-----+-----+
+
+Fault Distribution
++--------+-----+
+|is_fault|count|
++--------+-----+
+|false   |900  |
+|true    |100  |
++--------+-----+
+
+Error Code Distribution
++----------+-----+
+|error_code|count|
++----------+-----+
+|null      |900  |
+|E001      |35   |
+|E002      |25   |
+|E003      |20   |
+|E004      |20   |
++----------+-----+
+```
+---
+### `run_machine_eda(df)`
+
+Executes the complete Machine EDA workflow in three stages:
+
+1. **Schema Exploration**
+2. **Data Quality Assessment**
+3. **Exploratory Statistics**
+
+After completing all stages, it displays a summary of the analyzed dataset.
+
+### Example Output
+
+```text
+================================================================================
+           MACHINE SENSOR EXPLORATORY DATA ANALYSIS
+================================================================================
+
+--------------------------------------------------------------------------------
+ SCHEMA EXPLORATION
+--------------------------------------------------------------------------------
+
+Dataset Summary
+Total Records : 1,000
+Total Columns : 21
+
+Schema
+root
+ |-- event_id: string (nullable = true)
+ |-- event_time: timestamp (nullable = true)
+ |-- machine_id: string (nullable = true)
+ |-- machine_type: string (nullable = true)
+ ...
+
+--------------------------------------------------------------------------------
+ DATA QUALITY
+--------------------------------------------------------------------------------
+
+Null Value Analysis
++----------+-------------+----------------+
+|total_rows|event_id_null|event_time_null |
++----------+-------------+----------------+
+|1000      |0            |0               |
++----------+-------------+----------------+
+
+Category Validation
+...
+
+Numeric Range Validation
+...
+
+Duplicate Event IDs
+...
+
+Potential Outliers
+...
+
+--------------------------------------------------------------------------------
+ EXPLORATORY STATISTICS
+--------------------------------------------------------------------------------
+
+Sensor Statistics
+...
+
+Machine Type Distribution
+...
+
+Status Distribution
+...
+
+Fault Rate by Machine Type
+...
+
+Fault Rate by Shift
+...
+
+Average Sensor Values by Machine Type
+...
+
+================================================================================
+               MACHINE EDA COMPLETED SUCCESSFULLY
+================================================================================
+Records Analyzed : 1,000
+Columns          : 21
+================================================================================
+
 
 
